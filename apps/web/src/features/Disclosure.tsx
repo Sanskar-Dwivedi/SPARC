@@ -1,22 +1,12 @@
-/* Quality, provenance and limitation disclosure.
+/* Quality and provenance disclosure.
  *
- * The requirement is that data mode, mock/pre-publication state, coverage,
- * method, sources, attribution, warnings and the boundary disclaimer are all
- * "visible without opening developer tools". So none of this is behind a
- * console log or a tooltip, and the parts that qualify the result — the badge,
- * the proxy disclaimer, the boundary disclaimer — are not inside a collapsed
- * <details>. Only the long source inventory collapses, and it defaults open on
- * the detail screen where provenance is the point. */
+ * The detailed quality and source records remain available in their dedicated
+ * panels. The standalone limitations block was removed from the dashboard so
+ * the result can lead with the data instead of a long warning list. */
 
 import { useId } from 'react';
 import type { Provenance } from '../contract/types';
-import {
-  BOUNDARY_DISCLAIMER,
-  PROXY_DISCLAIMER,
-  type ModeBadge,
-  type QualityView,
-} from '../viewmodel/mapper';
-import { BoundaryAttributionLine } from './BoundaryProvenance';
+import { type ModeBadge, type QualityView } from '../viewmodel/mapper';
 import { Callout, QualityPill, Row, Value } from './Primitives';
 
 /* Primary-screen estimate strip. Detailed source, method and quality fields
@@ -31,36 +21,6 @@ export function ModeBanner({ badge }: { badge: ModeBadge; warnings: string[] }) 
       <span className="prov__src">Data source: {badge.transportLabel}</span>
       <span className="sr-only">{badge.detail}</span>
     </div>
-  );
-}
-
-export function LimitationsPanel() {
-  const id = useId();
-  return (
-    <section className="panel panel--limits" aria-labelledby={id}>
-      <h3 id={id}>Limitations you must read before using these numbers</h3>
-      <ul className="limits">
-        <li>{PROXY_DISCLAIMER}</li>
-        <li>{BOUNDARY_DISCLAIMER}</li>
-        <li>
-          A change in a proxy is not a cause. Vegetation indices move with crops,
-          rainfall, irrigation and harvest timing; a built-up signal is confused
-          by bare soil and construction; open water excludes volume, quality and
-          groundwater.
-        </li>
-        <li>
-          Pixels that were cloudy or invalid are <em>unknown</em>, not unchanged.
-          Read common-valid coverage before reading the change value.
-        </li>
-        <li>
-          Scope is district-only. No subdistrict boundary has passed its approval
-          gate, so no child-region result is offered.
-        </li>
-      </ul>
-      {/* Attribution sits inside the limitations block so it travels with any
-          screenshot of the caveats — the two are needed together. */}
-      <BoundaryAttributionLine />
-    </section>
   );
 }
 

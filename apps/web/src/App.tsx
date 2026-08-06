@@ -16,7 +16,6 @@ import type { ComparisonSelection, ForecastHazard, RegionRef } from './contract/
 import { DataError } from './data/errors';
 import { createTransport, Repository } from './data/repository';
 import { DetailScreen } from './features/DetailView';
-import { LimitationsPanel } from './features/Disclosure';
 import { ForecastDashboard } from './features/ForecastDashboard';
 import { JourneyRail, LedgerStrip, type JourneyStep } from './features/Ledger';
 import { ProvenanceDrawer } from './features/ProvenanceDrawer';
@@ -444,7 +443,6 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
           />
         )}
 
-        {route.name !== 'forecast' ? <LimitationsPanel /> : null}
       </main>
 
       <footer className="foot">

@@ -206,7 +206,6 @@ body {
 .panel__sub { color: var(--dim); font-weight: 400; font-size: 0.9rem; }
 .panel__lede { margin: 0 0 0.75rem; color: var(--dim); display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
 .panel__basis { font-size: 0.82rem; }
-.panel--limits { background: var(--panel-2); }
 
 .periods {
   display: grid;
@@ -327,8 +326,6 @@ body {
 .source { margin: 0.5rem 0; border: 1px solid var(--line); border-radius: var(--radius); padding: 0.5rem 0.7rem; }
 .source summary { cursor: pointer; font-weight: 600; }
 
-.limits { margin: 0; padding-left: 1.15rem; font-size: 0.9rem; }
-.limits li { margin: 0.4rem 0; }
 
 .interp { font-size: 1.02rem; margin: 0.2rem 0 0.6rem; }
 .rule { font-size: 0.78rem; color: var(--dim); margin-top: 0.8rem; }
@@ -596,17 +593,6 @@ body {
     linear-gradient(var(--accent), var(--accent)) 100% 100% / 8px 1px no-repeat;
   opacity: 0.32;
 }
-/* The limitations block keeps its warning colour through the corner marks too,
-   so the one panel that must not be skimmed still reads differently. */
-.sparc-panel .panel--limits::after {
-  background-image:
-    linear-gradient(var(--warn), var(--warn)), linear-gradient(var(--warn), var(--warn)),
-    linear-gradient(var(--warn), var(--warn)), linear-gradient(var(--warn), var(--warn)),
-    linear-gradient(var(--warn), var(--warn)), linear-gradient(var(--warn), var(--warn)),
-    linear-gradient(var(--warn), var(--warn)), linear-gradient(var(--warn), var(--warn));
-  opacity: 0.5;
-}
-
 /* Bracketed micro-labels, matching the globe's telemetry row. Generated, so
    the underlying text stays clean when copied or read aloud. */
 .sparc-panel .row__label::before,

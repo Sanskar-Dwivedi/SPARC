@@ -93,15 +93,3 @@ export function BoundaryProvenancePanel() {
     </section>
   );
 }
-
-/** Compact form for the summary screen, so attribution travels with a screenshot. */
-export function BoundaryAttributionLine() {
-  return (
-    <p className="attrib-line">
-      <span className="attrib-line__label">Boundary</span>
-      {release.release.provider} <code>{release.release.boundaryId}</code> ·{' '}
-      <strong>{release.release.sourceLicense}</strong> (share-alike) ·{' '}
-      {RECORD_DISCLAIMER}
-    </p>
-  );
-}
