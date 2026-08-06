@@ -1,0 +1,688 @@
+/* SPARC — everything after the satellite.
+ *
+ * Scrapped and rebuilt. The previous three attempts all shared one skeleton —
+ * a vertical stack of rectangles in a right-hand drawer — and repainting that
+ * skeleton is why each redesign felt like the last one. This sheet has no
+ * drawer, no stack and almost no rectangles.
+ *
+ * The map is the canvas. Everything else is text and hairlines floating over
+ * it, anchored to the corners, with a vignette rather than a panel keeping it
+ * legible. Nothing here is a card.
+ */
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("./fonts/Fraunces-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Public Sans";
+  src: url("./fonts/PublicSans-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./fonts/IBMPlexMono-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./fonts/IBMPlexMono-Medium.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) {
+  --void: #04070d;
+  --ink: #eef2f4;
+  --ink-2: #9fb0bb;
+  --ink-3: #62727d;
+  --hair: rgba(126, 170, 205, 0.16);
+  --raise: rgba(126, 170, 205, 0.07);
+
+  --sig-water: #48d6ef;
+  --sig-veg: #9fe05a;
+  --sig-built: #ffb057;
+  --sig-heat: #ff7a5c;
+  --caution: #ffd166;
+  --verified: #6fe0a8;
+
+  --display: "Fraunces", Georgia, serif;
+  --body: "Public Sans", system-ui, sans-serif;
+  --data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+
+  --bg: var(--void); --panel: #0a1119; --panel-2: #0f1822;
+  --line: var(--hair); --dim: var(--ink-2); --accent: var(--sig-water);
+  --warn: var(--caution); --stop: var(--sig-heat); --ok: var(--verified);
+  --radius: 3px;
+
+  font-family: var(--body);
+  color: var(--ink);
+  line-height: 1.55;
+}
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) :is(input, button, select, textarea) { font-family: var(--body); }
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) :is(code, pre, .value) { font-family: var(--data); font-variant-numeric: tabular-nums; }
+
+/* ══ THE SHELL IS NOW THE WHOLE SCREEN ═════════════════════════════════════ */
+.sparc-panel {
+  width: 100vw !important;
+  background: var(--void);
+  border-left: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+.sparc-panel::before { display: none; }
+.sparc-panel__grip { display: none; }
+.sparc-panel__mount { height: 100%; }
+.sparc-panel__mount::before { display: none; }
+.sparc-panel .app { padding: 0; margin: 0; max-width: none; height: 100%; display: flex; flex-direction: column; }
+.sparc-panel .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.sparc-panel .foot { display: none; }
+.ledger, .rail, .shellhead .brand__sub { display: none; }
+
+.shellhead {
+  position: relative; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.7rem clamp(1rem, 2.5vw, 2rem);
+  border-bottom: 1px solid var(--hair);
+  background: var(--void);
+}
+:is(.sparc-panel, #root) .topbar { display: contents; position: static; margin: 0; padding: 0; border: 0; background: none; }
+:is(.sparc-panel, #root) .brand { align-items: center; gap: 0.55rem; }
+:is(.sparc-panel, #root) .logo__mark { fill: var(--ink); width: 0.9rem; height: 0.9rem; }
+:is(.sparc-panel, #root) .logo__word { font-family: var(--body); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.3em; margin-right: -0.3em; }
+:is(.sparc-panel, #root) .topbar__actions { gap: 0.4rem; }
+:is(.sparc-panel, #root) .prov { display: none; }
+
+/* ══ ATLAS ═════════════════════════════════════════════════════════════════ */
+.atlas { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.atlas__map { position: absolute; inset: 0; }
+.atlas__map canvas { display: block; }
+.atlas__map--none { display: grid; place-content: center; padding: 2rem; color: var(--ink-3); text-align: center; }
+
+/* A vignette instead of panels. Every readout below sits directly on the map;
+   this is what keeps them readable over a bright coastline without boxing any
+   of them in. */
+.atlas__vig {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(4,7,13,0.92) 0%, rgba(4,7,13,0) 22%, rgba(4,7,13,0) 58%, rgba(4,7,13,0.94) 100%),
+    linear-gradient(90deg, rgba(4,7,13,0.85) 0%, rgba(4,7,13,0) 34%, rgba(4,7,13,0) 62%, rgba(4,7,13,0.88) 100%);
+}
+.atlas > *:not(.atlas__map):not(.atlas__vig) { position: absolute; z-index: 2; }
+
+/* ── place, top-left ────────────────────────────────────────────────────── */
+.atlas__place { top: clamp(1rem, 3vh, 2.2rem); left: clamp(1rem, 3vw, 2.6rem); max-width: min(28rem, 52vw); }
+.atlas__where {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.7rem, 4.2vw, 3.2rem);
+  font-weight: 300;
+  font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 120;
+  line-height: 0.98; letter-spacing: -0.03em;
+  text-shadow: 0 2px 40px rgba(0,0,0,0.9);
+}
+.atlas__meta {
+  margin: 0.6rem 0 0;
+  font-family: var(--data); font-size: 0.66rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.atlas__warn { color: var(--caution); }
+
+/* ── measurement selector, bottom-left, lateral ─────────────────────────── */
+.atlas__pick {
+  left: clamp(1rem, 3vw, 2.6rem);
+  bottom: clamp(5.5rem, 13vh, 7.5rem);
+  display: flex; gap: 0;
+  border-top: 1px solid var(--hair);
+}
+.pick {
+  display: grid; gap: 0.25rem;
+  padding: 0.85rem 1.1rem 0.9rem;
+  text-align: left; font: inherit; color: var(--ink-3);
+  background: none; border: 0; border-top: 2px solid transparent;
+  margin-top: -1px;
+  cursor: pointer;
+  transition: color 180ms var(--ease), border-color 180ms var(--ease), background 180ms var(--ease);
+}
+.pick:hover { color: var(--ink-2); background: var(--raise); }
+.pick--on { color: var(--ink); border-top-color: var(--signal); }
+.pick__glyph { font-size: 0.85rem; color: var(--signal); opacity: 0.55; transition: opacity 180ms var(--ease); }
+.pick--on .pick__glyph { opacity: 1; }
+.pick__name { font-family: var(--data); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; }
+.pick__delta { font-family: var(--data); font-size: 0.86rem; font-weight: 500; color: inherit; }
+.pick--missing .pick__delta { color: var(--caution); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── readout, right ─────────────────────────────────────────────────────── */
+.atlas__read {
+  right: clamp(1rem, 3vw, 2.6rem);
+  bottom: clamp(5.5rem, 13vh, 7.5rem);
+  width: min(30rem, 52vw);
+  text-align: right;
+}
+.read__label {
+  margin: 0 0 0.5rem;
+  font-family: var(--data); font-size: 0.64rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.read__value {
+  margin: 0;
+  font-family: var(--data);
+  font-size: clamp(2rem, 5.2vw, 3.6rem);
+  font-weight: 500; line-height: 0.95; letter-spacing: -0.04em;
+  white-space: nowrap;
+  color: var(--signal);
+  text-shadow: 0 0 50px color-mix(in srgb, var(--signal) 40%, transparent), 0 2px 30px rgba(0,0,0,0.9);
+  /* No transition on the digits: the number must never be caught between two
+     values the data never had. It updates per frame from the scrubber. */
+}
+.read__unit { font-size: 0.36em; white-space: nowrap; font-weight: 400; letter-spacing: 0; color: var(--ink-2); }
+.read__none {
+  margin: 0; font-family: var(--display); font-size: clamp(1.8rem, 4.5vw, 3rem);
+  font-weight: 300; font-variation-settings: "SOFT" 40, "opsz" 100; color: var(--caution);
+}
+.read__why { margin: 0.5rem 0 0; font-size: 0.84rem; color: var(--caution); }
+.read__when {
+  margin: 0.7rem 0 0;
+  font-family: var(--data); font-size: 0.62rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+/* Interpolation is stated, and stated in the warning colour, because a smooth
+   value between two discrete observations is the one thing on this screen that
+   could be mistaken for data. */
+.read__when--interp { color: var(--caution); }
+.read__delta { margin: 0.35rem 0 0; font-family: var(--data); font-size: 0.8rem; color: var(--ink-2); }
+.read__cov {
+  display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem;
+  margin: 1.1rem 0 0; font-size: 0.74rem; color: var(--ink-3);
+}
+.read__covbar { width: 4.5rem; height: 3px; background: var(--hair); flex: none; }
+.read__covbar span { display: block; height: 100%; background: var(--signal); }
+.read__acts { display: flex; gap: 1.1rem; justify-content: flex-end; margin-top: 1.2rem; }
+.lnk {
+  padding: 0; font-family: var(--data); font-size: 0.66rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-2); background: none; border: 0; border-bottom: 1px solid var(--hair);
+  cursor: pointer; transition: color 180ms var(--ease), border-color 180ms var(--ease);
+}
+.lnk:hover { color: var(--ink); border-bottom-color: var(--signal); }
+.lnk:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── time, along the bottom ─────────────────────────────────────────────── */
+.atlas__time {
+  left: clamp(1rem, 3vw, 2.6rem); right: clamp(1rem, 3vw, 2.6rem);
+  bottom: clamp(1.3rem, 3.5vh, 2.4rem);
+  padding-top: 0.5rem;
+}
+.time__ends {
+  display: flex; justify-content: space-between;
+  font-family: var(--data); font-size: 0.64rem; letter-spacing: 0.1em; color: var(--ink-3);
+  margin-bottom: 0.5rem;
+}
+.time__end--on { color: var(--signal); }
+.time__range {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; height: 22px; margin: 0;
+  background: none; cursor: grab;
+}
+.time__range::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(90deg, var(--hair), color-mix(in srgb, var(--signal) 45%, transparent)); }
+.time__range::-moz-range-track { height: 2px; background: linear-gradient(90deg, var(--hair), color-mix(in srgb, var(--signal) 45%, transparent)); }
+.time__range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 15px; height: 15px; margin-top: -6.5px;
+  border-radius: 50%; background: var(--signal); border: 0;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--signal) 18%, transparent), 0 0 24px var(--signal);
+  cursor: grab;
+}
+.time__range::-moz-range-thumb {
+  width: 14px; height: 14px; border: 0; border-radius: 50%;
+  background: var(--signal); box-shadow: 0 0 0 5px color-mix(in srgb, var(--signal) 18%, transparent);
+}
+.time__range:active { cursor: grabbing; }
+.time__range:disabled::-webkit-slider-thumb { background: var(--ink-3); box-shadow: none; }
+.time__ticks { position: relative; height: 0; }
+.time__tick { position: absolute; top: -13px; width: 1px; height: 9px; background: var(--ink-3); }
+.time__hint { margin: 0.6rem 0 0; font-family: var(--data); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+
+.atlas__cursor {
+  top: clamp(1rem, 3vh, 2.2rem); right: clamp(1rem, 3vw, 2.6rem);
+  margin: 0; font-family: var(--data); font-size: 0.66rem; letter-spacing: 0.1em;
+  color: var(--ink-3); opacity: 0.7; transition: opacity 200ms var(--ease);
+}
+.atlas__cursor--on { opacity: 1; color: var(--ink-2); }
+.atlas__fit {
+  top: clamp(3.2rem, 7vh, 4.4rem); right: clamp(1rem, 3vw, 2.6rem);
+  padding: 0.35rem 0.7rem;
+  font-family: var(--data); font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-3); background: rgba(4,7,13,0.6); border: 1px solid var(--hair);
+  cursor: pointer; transition: color 180ms var(--ease), border-color 180ms var(--ease);
+}
+.atlas__fit:hover { color: var(--ink); border-color: var(--ink-3); }
+
+/* ══ TARGET + PERIOD SELECTION ═════════════════════════════════════════════
+   Also rebuilt. It was a modal card of chips; it is now a full-bleed list you
+   move through, with the same lateral, low-chrome language as the atlas. */
+:is(.sparc-panel, #root) .console-wrap {
+  position: absolute; inset: 0; padding: 0; background: var(--void);
+  backdrop-filter: none; align-items: stretch; animation: none; overflow-y: auto;
+}
+:is(.sparc-panel, #root) .console {
+  width: 100%; max-width: 62rem; margin: 0 auto; max-height: none;
+  padding: clamp(2rem, 6vh, 4rem) clamp(1.25rem, 4vw, 3rem) 4rem;
+  background: none; border: 0; border-radius: 0; box-shadow: none; animation: none;
+}
+:is(.sparc-panel, #root) .console::before, :is(.sparc-panel, #root) .console::after { content: none; }
+:is(.sparc-panel, #root) .console__step {
+  margin-bottom: 1rem; font-family: var(--data); font-size: 0.63rem;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-3);
+}
+:is(.sparc-panel, #root) .console h2 {
+  margin: 0 0 0.9rem; max-width: 18ch;
+  font-family: var(--display); font-size: clamp(1.9rem, 5.5vw, 3.2rem);
+  font-weight: 300; font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 120;
+  line-height: 1; letter-spacing: -0.03em; text-transform: none; color: var(--ink);
+}
+:is(.sparc-panel, #root) .console__lede { margin-bottom: 2rem; max-width: 52ch; font-size: 0.96rem; color: var(--ink-2); }
+:is(.sparc-panel, #root) .console__close {
+  top: 1rem; right: 1.2rem; width: 2rem; height: 2rem;
+  color: var(--ink-3); background: none; border: 1px solid var(--hair); border-radius: 50%;
+  transition: color 180ms var(--ease), border-color 180ms var(--ease), transform 220ms var(--ease);
+}
+:is(.sparc-panel, #root) .console__close:hover { color: var(--ink); border-color: var(--ink-3); transform: rotate(90deg); }
+
+:is(.sparc-panel, #root) .console__field { gap: 0; flex-wrap: nowrap; }
+:is(.sparc-panel, #root) .console__field input {
+  padding: 1rem 0; font-family: var(--data); font-size: 1.05rem;
+  color: var(--ink); background: none;
+  border: 0; border-bottom: 1px solid var(--hair); border-radius: 0;
+  transition: border-color 180ms var(--ease);
+}
+:is(.sparc-panel, #root) .console__field input::placeholder { color: var(--ink-3); }
+:is(.sparc-panel, #root) .console__field input:focus { border-bottom-color: var(--sig-water); box-shadow: none; outline: none; }
+:is(.sparc-panel, #root) .cta--sm {
+  min-height: 0; padding: 0 0 0 1.5rem; align-self: stretch; border: 0; border-bottom: 1px solid var(--hair);
+  border-radius: 0; background: none; color: var(--ink-2);
+  font-family: var(--data); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+}
+:is(.sparc-panel, #root) .cta--sm:hover { color: var(--sig-water); background: none; }
+
+:is(.sparc-panel, #root) .console__suggest { margin-top: 0; }
+:is(.sparc-panel, #root) .console__suggest li { border-bottom: 1px solid var(--hair); }
+:is(.sparc-panel, #root) .console__suggest button {
+  padding: 0.85rem 0; font-size: 0.95rem; color: var(--ink-2);
+  border: 0; border-radius: 0; background: none;
+  transition: color 180ms var(--ease), padding-left 320ms var(--ease);
+}
+:is(.sparc-panel, #root) .console__suggest button:hover,
+:is(.sparc-panel, #root) .console__suggest button:focus-visible { color: var(--ink); padding-left: 0.9rem; background: none; }
+:is(.sparc-panel, #root) .console__suggest code { font-family: var(--data); font-size: 0.78rem; color: var(--ink-3); }
+:is(.sparc-panel, #root) .console__msg {
+  margin-top: 1.2rem; padding: 0 0 0 1rem; font-size: 0.92rem; color: var(--ink-2);
+  background: none; border: 0; border-left: 2px solid var(--caution); border-radius: 0;
+}
+:is(.sparc-panel, #root) .console__foot { margin-top: 2.4rem; padding-top: 0; border: 0; }
+:is(.sparc-panel, #root) .console__note { margin-top: 2rem; max-width: 60ch; font-size: 0.82rem; color: var(--ink-3); }
+:is(.sparc-panel, #root) :is(.picker__label, .console__foot-label) {
+  display: block; margin-bottom: 0.4rem;
+  font-family: var(--data); font-size: 0.62rem; font-weight: 500;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3);
+}
+:is(.sparc-panel, #root) .picker__label--fixture, :is(.sparc-panel, #root) .picker__warn { color: var(--caution); }
+
+/* Targets and periods: a list you run down, each row opening on hover with a
+   hairline that fills. No tiles, no chips, no cards. */
+:is(.sparc-panel, #root) :is(.picker__grid, .period-list, .picker__fixture) {
+  display: block; gap: 0; background: none; border: 0; border-top: 1px solid var(--hair);
+}
+:is(.sparc-panel, #root) :is(.period-card, .citycard) {
+  position: relative; display: grid; gap: 0.3rem; justify-items: start; width: 100%;
+  padding: 1.15rem 0; background: none; border: 0; border-bottom: 1px solid var(--hair);
+  border-radius: 0; transform: none; box-shadow: none; text-align: left;
+  transition: padding-left 340ms var(--ease), color 180ms var(--ease);
+}
+:is(.sparc-panel, #root) :is(.period-card, .citycard)::after { content: none; }
+:is(.sparc-panel, #root) :is(.period-card, .citycard)::before {
+  content: ""; position: absolute; left: 0; bottom: -1px; height: 1px; width: 0;
+  background: var(--sig-water); transition: width 420ms var(--ease);
+}
+:is(.sparc-panel, #root) :is(.period-card:hover, .period-card:focus-visible, .citycard:hover, .citycard:focus-visible) {
+  padding-left: 1.1rem; background: none; transform: none; box-shadow: none;
+}
+:is(.sparc-panel, #root) :is(.period-card:hover, .period-card:focus-visible, .citycard:hover, .citycard:focus-visible)::before { width: 100%; }
+:is(.sparc-panel, #root) .period-card__season, :is(.sparc-panel, #root) .citycard__country {
+  font-family: var(--data); font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3);
+}
+:is(.sparc-panel, #root) .period-card__label, :is(.sparc-panel, #root) .citycard__name {
+  font-family: var(--display); font-size: clamp(1.25rem, 3.2vw, 1.75rem); font-weight: 300;
+  font-variation-settings: "SOFT" 40, "opsz" 60; letter-spacing: -0.02em; text-transform: none; color: var(--ink);
+}
+:is(.sparc-panel, #root) .period-card__dates { font-family: var(--data); font-size: 0.72rem; color: var(--ink-3); }
+:is(.sparc-panel, #root) .period-card__vs { font-style: normal; }
+:is(.sparc-panel, #root) :is(.period-card__go, .citycard__go) {
+  margin-top: 0.6rem; font-family: var(--data); font-size: 0.64rem;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--sig-water);
+}
+:is(.sparc-panel, #root) .citycard__story { font-size: 0.86rem; color: var(--ink-3); }
+:is(.sparc-panel, #root) .citycard__foot { border-top: 0; }
+:is(.sparc-panel, #root) .citycard__covfill { background: var(--sig-water); }
+:is(.sparc-panel, #root) .citycard__badge { color: var(--caution); border-color: color-mix(in srgb, var(--caution) 40%, transparent); border-radius: 2px; }
+:is(.sparc-panel, #root) .dial__track { stroke: var(--hair); }
+:is(.sparc-panel, #root) .dial__label { font-family: var(--data); font-size: 0.54rem; letter-spacing: 0.12em; color: var(--ink-3); }
+:is(.sparc-panel, #root) .chip {
+  padding: 0.45rem 0; margin-right: 1.4rem;
+  font-family: var(--data); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-2); background: none; border: 0; border-bottom: 1px solid var(--hair); border-radius: 0;
+}
+:is(.sparc-panel, #root) .chip:hover { color: var(--sig-water); border-bottom-color: var(--sig-water); background: none; }
+:is(.sparc-panel, #root) .console__chips { gap: 0; flex-wrap: wrap; }
+
+/* ══ CONTROLS ══════════════════════════════════════════════════════════════ */
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) :is(.btn, .cta) {
+  padding: 0.5rem 0.9rem; min-height: 2.2rem; overflow: visible;
+  font-family: var(--data); font-size: 0.64rem; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-2); background: none; border: 1px solid var(--hair); border-radius: 3px;
+  cursor: pointer; transition: color 180ms var(--ease), border-color 180ms var(--ease);
+}
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) :is(.btn, .cta)::before { content: none; }
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) :is(.btn, .cta):hover { color: var(--ink); border-color: var(--ink-3); }
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) .btn--primary { color: var(--void); background: var(--ink); border-color: var(--ink); }
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) .btn--primary:hover { background: #fff; border-color: #fff; color: var(--void); }
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) .btn--link {
+  padding: 0; min-height: 0; border: 0; background: none;
+  font-family: var(--body); font-size: 0.88rem; letter-spacing: 0; text-transform: none;
+  color: var(--sig-water); text-decoration: underline; text-underline-offset: 3px;
+}
+:is(.sparc-panel, #root, .report-overlay, .prov-drawer, .sheet) :focus-visible { outline: 2px solid var(--sig-water); outline-offset: 3px; }
+
+/* ══ EVIDENCE + PROVENANCE SHEETS ══════════════════════════════════════════ */
+/* Both arrive from an edge over the map rather than pushing it out of the way,
+   so the reader never loses the place they are reading about. */
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 96;
+  max-height: 82vh; display: flex; flex-direction: column;
+  background: #060b13; border-top: 1px solid var(--hair);
+  transform: translateY(101%); transition: transform 340ms var(--ease);
+}
+.sheet--open { transform: none; }
+.sheet__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1rem clamp(1.25rem, 4vw, 3rem); border-bottom: 1px solid var(--hair);
+}
+.sheet__title { margin: 0; font-family: var(--data); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+.sheet__body { flex: 1; overflow-y: auto; padding: 1.5rem clamp(1.25rem, 4vw, 3rem) 2.5rem; }
+.sheet__x { width: 2rem; height: 2rem; font: inherit; color: var(--ink-3); background: none; border: 1px solid var(--hair); border-radius: 50%; cursor: pointer; }
+.sheet__x:hover { color: var(--ink); border-color: var(--ink-3); }
+
+.prov-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 97;
+  width: min(30rem, 100vw); display: flex; flex-direction: column;
+  background: #060b13; border-left: 1px solid var(--hair);
+  transform: translateX(101%); transition: transform 320ms var(--ease); overflow: hidden;
+}
+.prov-drawer--open { transform: none; }
+.prov-drawer__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--hair); }
+.prov-drawer__title { margin: 0; font-family: var(--data); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+.prov-drawer__body { flex: 1; overflow-y: auto; padding: 1.5rem; }
+.prov-drawer__group + .prov-drawer__group { margin-top: 1.8rem; padding-top: 1.4rem; border-top: 1px solid var(--hair); }
+.prov-drawer__legend { margin: 0 0 0.9rem; font-family: var(--data); font-size: 0.62rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+.prov-drawer__close { width: 2rem; height: 2rem; font: inherit; color: var(--ink-3); background: none; border: 1px solid var(--hair); border-radius: 50%; cursor: pointer; }
+.prov-drawer__close:hover { color: var(--ink); border-color: var(--ink-3); }
+.prov-scrim { position: fixed; inset: 0; z-index: 95; background: rgba(4,7,13,0.55); opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease); }
+.prov-scrim--open { opacity: 1; pointer-events: auto; }
+
+/* The sheet has its own close control; the detail screen's back-crumb inside
+   it is a second exit that goes to the same place. */
+.sheet .crumb--sticky { border: 0; padding: 0; margin: 0; min-height: 0; justify-content: flex-end; }
+.sheet .crumb--sticky .btn--back { display: none; }
+.sheet .crumb--sticky .crumb__here { display: none; }
+
+/* Label / value rhythm, shared by both sheets and the detail screen. */
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .facts { display: grid; gap: 0.75rem; }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .facts__row { display: grid; grid-template-columns: minmax(6.5rem, 11rem) minmax(0, 1fr); gap: 0.2rem 1.2rem; align-items: baseline; }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .facts__key { font-family: var(--data); font-size: 0.6rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .facts__val { font-size: 0.9rem; color: var(--ink); overflow-wrap: anywhere; }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .facts__note { display: block; margin-top: 0.25rem; font-size: 0.8rem; color: var(--ink-3); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.row, .table tr) { display: grid; grid-template-columns: minmax(7rem, 12rem) minmax(0, 1fr); gap: 0.2rem 1.2rem; padding: 0; border: 0; }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.rows, .table tbody) { display: grid; gap: 0.7rem; }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .table { display: block; }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .table :is(th, td) { display: block; padding: 0; border: 0; width: auto; }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.row__label, .table th) { font-family: var(--data); font-size: 0.6rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .row__label::before, :is(.sheet, .prov-drawer, .sparc-panel, #root) .row__label::after { content: none; }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .row__note { display: block; margin-top: 0.2rem; font-family: var(--body); font-size: 0.78rem; letter-spacing: 0; text-transform: none; color: var(--ink-3); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .row__value { margin: 0; font-size: 0.9rem; color: var(--ink); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.pill, .chip2) {
+  padding: 0.1rem 0.45rem; font-family: var(--data); font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2);
+  background: none; border: 1px solid var(--hair); border-radius: 2px;
+}
+:is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.pill--complete, .pill--high, .chip2--verified) { color: var(--verified); border-color: color-mix(in srgb, var(--verified) 45%, transparent); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.pill--partial, .pill--low, .pill--unknown, .pill--medium, .pill--unavailable, .pill--failed, .chip2--caution) { color: var(--caution); border-color: color-mix(in srgb, var(--caution) 45%, transparent); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .callout {
+  margin: 1.1rem 0; padding: 0.9rem 1rem; background: var(--raise);
+  border: 0; border-left: 2px solid var(--sig-water); border-radius: 0 3px 3px 0;
+}
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .callout--warn { border-left-color: var(--caution); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .callout--stop { border-left-color: var(--sig-heat); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .callout__title { font-family: var(--data); font-size: 0.62rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) .callout__body { font-size: 0.88rem; color: var(--ink-2); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.list, .limits) { font-size: 0.9rem; line-height: 1.65; color: var(--ink-2); }
+:is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.panel > h3, .panel h4, .sheet h3, .sheet h4) {
+  margin: 1.6rem 0 0.8rem; padding: 0; border: 0;
+  font-family: var(--data); font-size: 0.63rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3);
+}
+:is(.sheet, .sparc-panel, #root) .panel { margin: 0; padding: 0 0 1.6rem; background: none; border: 0; border-radius: 0; }
+:is(.sheet, .sparc-panel, #root) .panel::before, :is(.sheet, .sparc-panel, #root) .panel::after { content: none; }
+:is(.sheet, .sparc-panel, #root) .panel__lede { margin: 0 0 1.2rem; max-width: 62ch; font-size: 0.92rem; color: var(--ink-2); }
+:is(.sheet, .sparc-panel, #root) .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr)); gap: 1.5rem; margin: 1.2rem 0 0; background: none; border: 0; }
+:is(.sheet, .sparc-panel, #root) .metrics > div { padding: 0; background: none; }
+:is(.sheet, .sparc-panel, #root) .metrics dt { font-family: var(--data); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+:is(.sheet, .sparc-panel, #root) .metrics dd { margin: 0.45rem 0 0; font-family: var(--data); font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 500; letter-spacing: -0.02em; }
+:is(.sheet, .sparc-panel, #root) .value--unavailable { color: var(--caution); font-style: normal; }
+:is(.sheet, .sparc-panel, #root) :is(.map, .choro__map) { border: 1px solid var(--hair); border-radius: 3px; background: #04070d; height: clamp(14rem, 30vh, 22rem); }
+:is(.sheet, .sparc-panel, #root) :is(.hint, .note, .rule) { font-size: 0.8rem; color: var(--ink-3); }
+:is(.sheet, .sparc-panel, #root) .interp { font-size: 1rem; line-height: 1.6; color: var(--ink); }
+:is(.sheet, .sparc-panel, #root) a { color: var(--sig-water); text-underline-offset: 3px; }
+:is(.sheet, .sparc-panel, #root) .source { background: none; border: 0; border-top: 1px solid var(--hair); border-radius: 0; padding: 0.9rem 0 0; margin: 1.2rem 0 0; }
+:is(.sheet, .sparc-panel, #root) .source summary { font-family: var(--data); font-size: 0.62rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
+:is(.sheet, .sparc-panel, #root) .scenes__all { background: var(--raise); border-color: var(--hair); border-radius: 3px; }
+:is(.sheet, .sparc-panel, #root) .attrib-block { background: var(--raise); border-left-color: var(--sig-water); border-radius: 0 3px 3px 0; }
+:is(.sheet, .sparc-panel, #root) .attrib-line { border-top-color: var(--hair); font-size: 0.78rem; color: var(--ink-3); }
+:is(.sheet, .sparc-panel, #root) .attrib-line__label { font-family: var(--data); font-size: 0.58rem; letter-spacing: 0.14em; color: var(--ink-2); }
+:is(.sheet, .sparc-panel, #root) :is(.viz__stack, .viz__ptrack, .viz__sens) { height: 6px; border-radius: 2px; background: var(--hair); }
+:is(.sheet, .sparc-panel, #root) :is(.viz__seg--valid, .viz__dot--valid) { background: var(--sig-water); }
+:is(.sheet, .sparc-panel, #root) .viz__title { font-family: var(--data); font-size: 0.6rem; letter-spacing: 0.16em; color: var(--ink-3); }
+:is(.sheet, .sparc-panel, #root) .viz__pval { font-family: var(--data); font-weight: 500; }
+:is(.sheet, .sparc-panel, #root) .layer { border-top-color: var(--hair); }
+:is(.sheet, .sparc-panel, #root) .panel--limits { margin: 1.4rem 0 0; padding: 1.2rem 1.2rem; background: var(--raise); border: 0; border-left: 2px solid var(--caution); border-radius: 0 3px 3px 0; }
+
+/* ══ STATES ════════════════════════════════════════════════════════════════ */
+:is(.sparc-panel, #root) .state { margin: 0; padding: clamp(2rem, 8vh, 5rem) clamp(1.25rem, 4vw, 3rem); }
+:is(.sparc-panel, #root) .state--loading { font-family: var(--data); font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+:is(.sparc-panel, #root) .spinner { display: none; }
+.ghost { list-style: none; margin: 0; padding: 0; }
+.ghost__row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1rem; padding: 1.4rem clamp(1.25rem, 4vw, 3rem); border-bottom: 1px solid var(--hair); animation: pulse 1.4s ease-in-out infinite; }
+.ghost__bar { height: 10px; background: var(--raise); border-radius: 2px; }
+.ghost__bar--short { width: 40%; }
+.ghost__bar--num { width: 6rem; height: 26px; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+:is(.sparc-panel, #root) .mode { display: none; }
+:is(.sparc-panel, #root) .fallback-city { padding: clamp(2rem, 6vh, 4rem) clamp(1.25rem, 4vw, 3rem); overflow-y: auto; }
+:is(.sparc-panel, #root) .fallback-city h1 { font-family: var(--display); font-weight: 300; font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 120; letter-spacing: -0.03em; }
+:is(.sparc-panel, #root) .fallback-city__grid { display: block; gap: 0; border-top: 1px solid var(--hair); }
+:is(.sparc-panel, #root) .fallback-city__card { padding: 1.3rem 0; background: none; border: 0; border-bottom: 1px solid var(--hair); }
+:is(.sparc-panel, #root) .fallback-city__card h2 { font-family: var(--data); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+:is(.sparc-panel, #root) .crumb { padding: 1rem clamp(1.25rem, 4vw, 3rem); margin: 0; }
+:is(.sparc-panel, #root) .crumb--sticky { position: static; display: flex; align-items: center; gap: 0.8rem; background: none; border-bottom: 1px solid var(--hair); }
+:is(.sparc-panel, #root) .crumb__here { font-family: var(--data); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+:is(.sparc-panel, #root) .main > .panel { padding: 1.6rem clamp(1.25rem, 4vw, 3rem); }
+:is(.sparc-panel, #root, .sheet) .panel > h2 {
+  margin: 0 0 0.8rem; padding: 0; border: 0; max-width: 20ch;
+  font-family: var(--display); font-size: clamp(1.6rem, 4.5vw, 2.6rem); font-weight: 300;
+  font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 100; line-height: 1.02;
+  letter-spacing: -0.025em; text-transform: none;
+}
+:is(.sparc-panel, #root, .sheet) .panel__sub { display: block; margin-top: 0.6rem; font-family: var(--data); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+:is(.sparc-panel, #root) .main { overflow-y: auto; }
+:is(.sparc-panel, #root) .atlas ~ * { }
+
+/* ══ REPORT WORKFLOW ═══════════════════════════════════════════════════════
+   A four-step form in the atlas's language: hairline fields, a step rail that
+   is actually a rail, and errors that sit where the problem is. */
+.report-overlay { z-index: 100; background: var(--void); backdrop-filter: none; padding: 0; place-items: start center; overflow-y: auto; }
+.report-overlay .report-dialog {
+  width: 100%; max-width: 54rem; margin: 0 auto; max-height: none;
+  padding: clamp(2rem, 6vh, 3.5rem) clamp(1.25rem, 4vw, 3rem) 5rem;
+  background: none; border: 0; box-shadow: none;
+}
+.report-overlay .report-dialog__topline { align-items: flex-start; }
+.report-overlay .report-dialog h2 {
+  margin: 0 0 0.7rem; max-width: 18ch;
+  font-family: var(--display); font-weight: 300;
+  font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 120;
+  font-size: clamp(1.8rem, 5vw, 2.9rem); line-height: 1; letter-spacing: -0.03em; text-transform: none;
+}
+.report-overlay :is(.report-dialog__eyebrow, .report-section__kicker) {
+  font-family: var(--data); font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3);
+}
+.report-overlay .report-dialog__lede { margin-bottom: 2.4rem; max-width: 54ch; font-size: 0.95rem; color: var(--ink-2); }
+.report-overlay .console__close {
+  position: static; width: 2.1rem; height: 2.1rem; flex: none;
+  color: var(--ink-3); background: none; border: 1px solid var(--hair); border-radius: 50%;
+  font-size: 1rem; line-height: 1; cursor: pointer;
+  transition: color 200ms var(--ease), border-color 200ms var(--ease), transform 240ms var(--ease);
+}
+.report-overlay .console__close:hover { color: var(--ink); border-color: var(--ink-3); transform: rotate(90deg); }
+
+/* The rail: one continuous hairline with the reached span lit, rather than four
+   separate underlined chips sitting in a row. */
+.report-overlay .report-steps {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  margin: 0 0 2.6rem; padding: 0; list-style: none;
+  border-top: 1px solid var(--hair);
+}
+.report-overlay .report-steps__item {
+  display: flex; align-items: center; gap: 0.55rem; min-width: 0;
+  padding: 0.85rem 0.6rem 0 0;
+  border: 0; border-top: 2px solid transparent; margin-top: -1px;
+  font-family: var(--data); font-size: 0.62rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-3);
+  transition: color 200ms var(--ease), border-color 200ms var(--ease);
+}
+.report-overlay .report-steps__item--active { color: var(--ink); border-top-color: var(--sig-water); }
+.report-overlay .report-steps__number {
+  display: grid; place-items: center; width: 1.4rem; height: 1.4rem; flex: none;
+  border: 1px solid currentColor; border-radius: 50%;
+  font-family: var(--data); font-size: 0.58rem;
+}
+
+.report-overlay .report-section h3 {
+  margin: 0 0 0.6rem;
+  font-family: var(--display); font-weight: 300;
+  font-variation-settings: "SOFT" 40, "opsz" 60;
+  font-size: clamp(1.15rem, 3vw, 1.6rem); line-height: 1.15;
+  letter-spacing: -0.02em; text-transform: none; color: var(--ink);
+}
+.report-overlay .report-section__hint { margin: 0 0 1.8rem; max-width: 58ch; font-size: 0.92rem; color: var(--ink-2); }
+
+/* Choices as rows, the selected one carrying a lit edge. */
+.report-overlay .report-choice-list { display: block; border-top: 1px solid var(--hair); }
+.report-overlay .report-choice {
+  position: relative; display: flex; gap: 0.85rem; align-items: flex-start;
+  padding: 1rem 0.9rem 1rem 0.75rem;
+  background: none; border: 0; border-bottom: 1px solid var(--hair); border-radius: 0;
+  cursor: pointer;
+  transition: background 200ms var(--ease), padding-left 300ms var(--ease);
+}
+.report-overlay .report-choice:hover { background: var(--raise); padding-left: 1.3rem; }
+.report-overlay .report-choice--selected { background: var(--raise); box-shadow: inset 2px 0 0 var(--sig-water); padding-left: 1.3rem; }
+.report-overlay .report-choice input { margin-top: 0.3rem; accent-color: var(--sig-water); }
+.report-overlay .report-choice strong { font-weight: 600; font-size: 0.95rem; }
+.report-overlay .report-choice small { display: block; margin-top: 0.2rem; font-size: 0.82rem; color: var(--ink-3); }
+
+/* Fields: a label, a rule, and a focus that lights the rule. No boxes. */
+.report-overlay .report-field {
+  display: grid; gap: 0.4rem; margin: 1.6rem 0;
+  font-family: var(--data); font-size: 0.6rem; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3);
+}
+.report-overlay :is(.report-field textarea, .report-field select, .report-field input, .report-review input) {
+  width: 100%; padding: 0.7rem 0;
+  font-family: var(--body); font-size: 0.95rem; letter-spacing: 0; text-transform: none;
+  color: var(--ink); background: none;
+  border: 0; border-bottom: 1px solid var(--hair); border-radius: 0;
+  transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease);
+}
+.report-overlay .report-field textarea { resize: vertical; min-height: 6rem; line-height: 1.6; }
+/* The focus indicator is the rule going accent plus a soft bloom under it. A
+   2px outline offset from a full-width borderless field drew a large cyan
+   rectangle that read as a validation error rather than as focus. */
+/* :focus, not :focus-visible. A text field is the one control where a pointer
+   user needs the same indication as a keyboard user — they have clicked into it
+   and need to see where their caret went. */
+.report-overlay :is(.report-field textarea, .report-field select, .report-field input, .report-review input):focus {
+  outline: none;
+  border-bottom-color: var(--sig-water);
+  box-shadow: 0 1px 0 0 var(--sig-water), 0 14px 30px -22px var(--sig-water);
+}
+.report-overlay :is(.report-field small, .report-upload small) {
+  font-family: var(--body); font-size: 0.78rem; letter-spacing: 0;
+  text-transform: none; color: var(--ink-3);
+}
+.report-overlay .report-upload { display: grid; justify-items: start; gap: 0.5rem; margin: 1.8rem 0; }
+.report-overlay .report-review {
+  display: grid; gap: 0.7rem; margin: 1.4rem 0;
+  padding: 1.1rem 1.2rem;
+  background: var(--raise); border: 0; border-left: 2px solid var(--hair); border-radius: 0 3px 3px 0;
+}
+.report-overlay .report-review p { grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 0.2rem 1.2rem; font-size: 0.88rem; }
+.report-overlay .report-review span { font-family: var(--data); font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.report-overlay .report-metadata { gap: 0.4rem 0.8rem; margin-top: 1.4rem; font-size: 0.85rem; color: var(--ink-2); }
+.report-overlay .report-metadata span { font-family: var(--data); font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.report-overlay .report-checks { display: grid; gap: 0.9rem; margin: 1.8rem 0; font-size: 0.88rem; color: var(--ink-2); }
+.report-overlay .report-checks label { display: flex; gap: 0.7rem; align-items: flex-start; cursor: pointer; }
+.report-overlay .report-checks input { margin-top: 0.3rem; accent-color: var(--sig-water); }
+.report-overlay .report-success {
+  font-family: var(--data); font-size: 0.7rem; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--verified);
+}
+
+/* A failure is something that happened to the reader, so it gets a shape and a
+   colour rather than a line of grey text under the form. */
+.report-overlay .report-status-notice {
+  margin: 1.6rem 0 0; padding: 0.9rem 1.1rem;
+  background: rgba(255, 209, 102, 0.07);
+  border-left: 2px solid var(--caution);
+  border-radius: 0 3px 3px 0;
+  font-size: 0.88rem; line-height: 1.6; color: var(--ink-2);
+}
+.report-overlay .report-status-notice code {
+  padding: 0.05rem 0.3rem; background: var(--raise); border-radius: 2px;
+  font-size: 0.85em; color: var(--ink);
+}
+.report-overlay .report-actions {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.6rem;
+  margin-top: 2.4rem; padding-top: 1.4rem; border-top: 1px solid var(--hair);
+}
+.report-overlay .report-actions--downloads { justify-content: flex-start; border: 0; padding-top: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .prov-drawer { transition: none; }
+  .ghost__row { animation: none; }
+  :is(.sparc-panel, #root) * { transition-duration: 1ms !important; }
+}
+
+@media (max-width: 52rem) {
+  /* At this width the readout and the selector cannot share a row, so the
+     readout moves above the selector and both go full width. */
+  .atlas__read { left: clamp(1rem, 3vw, 2.6rem); right: clamp(1rem, 3vw, 2.6rem); width: auto; bottom: 11.5rem; }
+  .atlas__pick { right: clamp(1rem, 3vw, 2.6rem); bottom: 6.2rem; overflow-x: auto; }
+  .pick { padding: 0.7rem 0.85rem; }
+  .atlas__place { max-width: 100%; right: clamp(1rem, 3vw, 2.6rem); }
+  .atlas__cursor, .atlas__fit { display: none; }
+  .prov-drawer { width: 100vw; }
+  :is(.sheet, .prov-drawer, .sparc-panel, #root) :is(.facts__row, .row, .table tr) { grid-template-columns: 1fr; }
+}

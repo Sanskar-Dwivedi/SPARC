@@ -20,6 +20,16 @@ import {
 } from '../catalog/cities';
 
 type Step = 'concern' | 'evidence' | 'review' | 'handoff';
+/* The offline demo serves the client from a static file server with no API
+   behind it. That is a supported way to run SPARC — the analysis is bundled —
+   but report packaging genuinely needs the service, so say which one and say
+   that nothing else is affected. */
+const REPORTING_OFFLINE =
+  'Report packaging needs the SPARC API, and nothing answered at '
+  + 'this origin. Start it with `uvicorn apps.api.app.main:app --port 8000` and '
+  + 'rebuild with VITE_API_BASE_URL=http://localhost:8000. The analysis, the '
+  + 'evidence and the provenance on screen are unaffected.';
+
 const STEPS: Array<{ id: Step; label: string }> = [
   { id: 'concern', label: 'Concern' }, { id: 'evidence', label: 'Evidence' },
   { id: 'review', label: 'Review' }, { id: 'handoff', label: 'Handoff' },
@@ -229,8 +239,25 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
       form.append('report', JSON.stringify(payload));
       files.slice(0, 6).forEach((file) => form.append('attachments', file, file.name));
       if (signatureFile) form.append('signature', signatureFile, signatureFile.name);
-      const response = await fetch(`${config.apiBaseUrl}/api/v1/reports`, { method: 'POST', body: form, headers: { 'Idempotency-Key': `browser-${crypto.randomUUID()}` } });
-      const result = await response.json() as { data?: { id: string; artifacts?: unknown[] }; meta?: { mock?: boolean }; detail?: string };
+      let response: Response;
+      try {
+        response = await fetch(`${config.apiBaseUrl}/api/v1/reports`, { method: 'POST', body: form, headers: { 'Idempotency-Key': `browser-${crypto.randomUUID()}` } });
+      } catch {
+        throw new Error(REPORTING_OFFLINE);
+      }
+      /* Read the body as text and decide, rather than calling response.json()
+         first. The offline demo is served by a static file server that answers
+         an unknown POST with a plain-text 404 — parsing that as JSON threw
+         "Unexpected non-whitespace character after JSON at position 4" and put
+         a raw parser exception in front of the user, which told them nothing
+         about what had actually gone wrong or what to do about it. */
+      const body = await response.text();
+      let result: { data?: { id: string; artifacts?: unknown[] }; meta?: { mock?: boolean }; detail?: string } = {};
+      try {
+        result = body ? JSON.parse(body) : {};
+      } catch {
+        throw new Error(REPORTING_OFFLINE);
+      }
       if (!response.ok || !result.data) throw new Error(result.detail || 'The report could not be created.');
       setReportId(result.data.id); setAccessToken(response.headers.get('X-Report-Access'));
       setStatusNotice('Report created. Download the generated PDF or evidence package, then review it before manual handoff.');

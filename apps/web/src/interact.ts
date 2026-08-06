@@ -26,7 +26,9 @@ const MAX_STEPS = 5;
 /* Groups that arrive together after a selection change. Nothing else in the
    interface animates in. */
 const GROUPS: Array<[container: string, item: string]> = [
-  ['.rows2', ':scope > .irow'],
+  ['.story', ':scope > section'],
+  ['.standing__grid', ':scope > p'],
+  ['.main', ':scope > .panel'],
 ];
 
 function reducedMotion(): boolean {

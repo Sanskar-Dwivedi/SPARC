@@ -10,7 +10,7 @@ import './viz.css';
 import './reporting/reporting.css';
 /* Last, so the interface system layers over the base dashboard styles on
    source order rather than by escalating selector weight. */
-import './system.css';
+import './atlas.css';
 import './forecast.css';
 import { installInteractions } from './interact';
 
@@ -54,7 +54,10 @@ export interface PanelTarget { lat: number; lon: number; name: string }
 
 let panelRoot: Root | null = null;
 let panelHost: HTMLElement | null = null;
-let panelWidth = Math.min(672, Math.round((typeof innerWidth === 'number' ? innerWidth : 1280) * 0.46));
+/* Full width. The analysis is no longer a drawer beside the planet — it is a
+   place you travel to and come back from, and a map-first canvas needs the
+   whole viewport to be worth looking at. */
+let panelWidth = typeof innerWidth === 'number' ? innerWidth : 1280;
 
 function ensureHost(): HTMLElement {
   if (panelHost) return panelHost;
@@ -75,8 +78,7 @@ function ensureHost(): HTMLElement {
   grip.tabIndex = 0;
 
   const MIN = 22 * 16;
-  const clampWidth = (px: number) =>
-    Math.max(MIN, Math.min(px, Math.round(innerWidth * 0.96)));
+  const clampWidth = (px: number) => Math.max(MIN, Math.min(px, innerWidth));
   const applyWidth = (px: number) => {
     panelWidth = clampWidth(px);
     el.style.width = `${panelWidth}px`;

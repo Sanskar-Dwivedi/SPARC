@@ -17,11 +17,12 @@ import { DataError } from './data/errors';
 import { createTransport, Repository } from './data/repository';
 import { DetailScreen } from './features/DetailView';
 import { ForecastDashboard } from './features/ForecastDashboard';
-import { JourneyRail, LedgerStrip, type JourneyStep } from './features/Ledger';
+
 import { ProvenanceDrawer } from './features/ProvenanceDrawer';
 import { Logo } from './features/Logo';
 import { ErrorView, LoadingView } from './features/StateViews';
-import { SummaryScreen } from './features/SummaryView';
+import { Atlas } from './features/Atlas';
+import { Sheet } from './features/Sheet';
 import { FallbackCityView } from './features/FallbackCityView';
 import { intensityFor, shapeForRegion } from './globe/overlay';
 import { styleFor } from './indicators';
@@ -105,6 +106,16 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
      what lets the drawer survive navigating between them. */
   const [provSubject, setProvSubject] = useState<DetailVM | null>(null);
   const [provOpen, setProvOpen] = useState(false);
+  /* Comparisons for every indicator on screen, fetched once the summary lands.
+     The story's coverage donut and sensitivity range live on the comparison,
+     not the summary — without this the chapters could only show what the
+     summary carried, which is the delta and nothing that qualifies it. */
+  const [evidence, setEvidence] = useState<Record<string, DetailVM>>({});
+  /* Which measurement's evidence is open in the sheet. Held here rather than in
+     the route so opening it does not navigate away from the map — the reader
+     closes the sheet and is exactly where they were, same zoom, same
+     indicator. */
+  const [sheetId, setSheetId] = useState<string | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
 
   const repository = useMemo(() => new Repository(createTransport(dataMode)), [dataMode]);
@@ -223,6 +234,23 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
     [repository, selection],
   );
 
+  useEffect(() => {
+    if (summary.status !== 'ready') return;
+    let live = true;
+    setEvidence({});
+    for (const card of summary.value.indicators) {
+      repository.getIndicatorComparison(selection, card.id)
+        .then((r) => {
+          if (!live) return;
+          setEvidence((prev) => ({ ...prev, [card.id]: mapDetail(r, repository.label) }));
+        })
+        // A chapter without its evidence still renders its delta and its
+        // caveat; it simply omits the marks it has no numbers for.
+        .catch(() => undefined);
+    }
+    return () => { live = false; };
+  }, [summary, repository, selection]);
+
   const openProvenance = useCallback((subject: DetailVM) => {
     setProvSubject(subject);
     setProvOpen(true);
@@ -317,41 +345,13 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
   /* ── dashboard ─────────────────────────────────────────────────────────── */
   const fallbackCity = catalogCity && !cityHasValidatedPack ? catalogCity : null;
 
-  /* ── the ledger (§2.4) ───────────────────────────────────────────────────
-     Every field is a value that came off the wire or a state the app is
-     genuinely in. Nothing here is composed to fill the strip: quality reports
-     the weakest grade among the indicators on screen, because a strip that
-     showed the best one would be advertising rather than reporting. */
-  const ready = summary.status === 'ready' ? summary.value : null;
-  const shown = detail.status === 'ready' ? detail.value : null;
-  const grades = ready?.indicators.map((i) => i.qualityLevel) ?? [];
-  const worst = (['unknown', 'low', 'medium', 'high'] as const).find((g) => grades.includes(g)) ?? null;
-  const scenes = ready && ready.baseline.sceneCount !== null && ready.comparison.sceneCount !== null
-    ? ready.baseline.sceneCount + ready.comparison.sceneCount
-    : null;
-  const offline = dataMode === 'demo';
-  const ledger = {
-    region: fallbackCity ? regionName : ready?.regionName ?? regionName,
-    window: fallbackCity ? null : `${period.baselineStart}→${period.comparisonEnd}`,
-    mode: summary.status === 'loading' || summary.status === 'idle'
-      ? 'LOADING'
-      : `PRECOMPUTED${offline ? ' · OFFLINE' : ''}`,
-    modeCaution: offline || summary.status === 'error',
-    quality: (summary.status === 'loading' ? 'loading' as const : shown?.quality.level ?? worst),
-    scenes,
-  };
-
-  /* Which step of the real sequence (§4.1) the reader is on. Region and period
-     are behind them by the time the dashboard renders at all, so from here the
-     rail only distinguishes inspecting from reading provenance. */
-  const step: JourneyStep = provOpen ? 'provenance' : 'indicator';
 
   return (
     <div className="app">
       <a className="skip" href="#main">Skip to results</a>
 
-      {/* Header, ledger and rail stick as one block. Three sibling stickies all
-          anchored at top: 0 would simply overlap each other. */}
+      {/* One thin sticky bar. The story carries the identity; the chrome only
+          needs to keep the two exits reachable. */}
       <div className="shellhead">
       <header className="topbar">
         <div className="brand">
@@ -379,9 +379,6 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
         </div>
       </header>
 
-      {/* The two pieces of persistent chrome, and deliberately the only two. */}
-      <LedgerStrip facts={ledger} />
-      <JourneyRail current={step} />
       </div>
 
       <main id="main" ref={mainRef} tabIndex={-1} className={`main${route.name === 'forecast' ? ' main--forecast' : ''}`}>
@@ -398,11 +395,11 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
               onUseOffline={() => setDataMode('demo')}
             />
           ) : (
-            <SummaryScreen
+            <Atlas
               summary={summary.value}
-              onOpenIndicator={openIndicator}
+              evidence={evidence}
+              onOpenEvidence={setSheetId}
               onOpenProvenance={openProvenance}
-              loadEvidence={loadEvidence}
               onReport={() => setReportOpen(true)}
             />
           )
@@ -449,8 +446,27 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
         <p>Contract {config.contractVersion} · No official SDG claim, no causal claim.</p>
       </footer>
 
+      {/* Evidence rises over the atlas; the map stays behind it. */}
+      <Sheet
+        open={sheetId !== null && !!evidence[sheetId]}
+        title={sheetId ? evidence[sheetId]?.indicatorName ?? 'Evidence' : 'Evidence'}
+        onClose={() => setSheetId(null)}
+      >
+        {(() => {
+          const shown = sheetId ? evidence[sheetId] : undefined;
+          if (!shown) return null;
+          return (
+            <DetailScreen
+              detail={shown}
+              onBack={() => setSheetId(null)}
+              onOpenProvenance={() => openProvenance(shown)}
+            />
+          );
+        })()}
+      </Sheet>
+
       <ProvenanceDrawer
-        detail={provSubject ?? shown}
+        detail={provSubject ?? (detail.status === 'ready' ? detail.value : null)}
         open={provOpen}
         onClose={() => setProvOpen(false)}
       />
