@@ -242,6 +242,37 @@ class ReportingApiTests(unittest.IsolatedAsyncioTestCase):
         with zipfile.ZipFile(io.BytesIO(archive.content)) as zipped:
             self.assertIn("attachments/attachment-1-field-photo.png", zipped.namelist())
 
+    async def test_signature_jpeg_is_embedded_and_packaged(self) -> None:
+        from PIL import Image
+
+        output = io.BytesIO()
+        Image.new("RGB", (32, 16), (255, 255, 255)).save(output, format="JPEG")
+        signature = output.getvalue()
+        payload = report_payload()
+        payload["signatureAttachment"] = {
+            "name": "signature.jpg",
+            "mediaType": "image/jpeg",
+            "bytes": len(signature),
+            "sha256": "sha256:" + hashlib.sha256(signature).hexdigest(),
+        }
+        created = await self.client.post(
+            "/api/v1/reports",
+            data={"report": json.dumps(payload)},
+            files=[("signature", ("signature.jpg", signature, "image/jpeg"))],
+        )
+        self.assertEqual(created.status_code, 201, created.text)
+        report = created.json()["data"]
+        self.assertEqual(report["payload"]["signatureAttachment"]["name"], "signature.jpg")
+        token = created.headers["x-report-access"]
+        archive_response = await self.client.get(
+            f"/api/v1/reports/{report['id']}/artifacts/zip",
+            headers={"X-Report-Access": token},
+        )
+        with zipfile.ZipFile(io.BytesIO(archive_response.content)) as zipped:
+            self.assertIn("signature/signature.jpg", zipped.namelist())
+            pdf = zipped.read(next(name for name in zipped.namelist() if name.startswith("report/")))
+        self.assertIn(b"SPARC", pdf)
+
     async def test_multipart_image_metadata_hash_is_canonicalized(self) -> None:
         from PIL import Image, PngImagePlugin
 

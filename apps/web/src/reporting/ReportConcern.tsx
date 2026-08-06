@@ -89,6 +89,7 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
   const [locationSharing, setLocationSharing] = useState(true);
   const [truthfulness, setTruthfulness] = useState(false);
   const [geminiConsent, setGeminiConsent] = useState(false);
+  const [reportConsent, setReportConsent] = useState(false);
   const [complainantName, setComplainantName] = useState('');
   const [complainantAddress, setComplainantAddress] = useState('');
   const [complainantEmail, setComplainantEmail] = useState('');
@@ -100,6 +101,7 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
   const [priorComplaintHistory, setPriorComplaintHistory] = useState('');
   const [requestedAction, setRequestedAction] = useState('');
   const [signatureDate, setSignatureDate] = useState('');
+  const [signatureFile, setSignatureFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [reportId, setReportId] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -112,10 +114,10 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
   useEffect(() => {
     if (!open) return;
     setStep('concern'); setConcerns([CONCERNS[0].code]); setObservation('');
-    setAuthority(catalogEntry?.jurisdiction.authorityIds[0] ?? AUTHORITIES[0].id); setLocationSharing(true); setTruthfulness(false); setGeminiConsent(false);
+    setAuthority(catalogEntry?.jurisdiction.authorityIds[0] ?? AUTHORITIES[0].id); setLocationSharing(false); setTruthfulness(false); setGeminiConsent(false); setReportConsent(false);
     setComplainantName(''); setComplainantAddress(''); setComplainantEmail(''); setComplainantPhone('');
     setIdentityConfirmation(false); setContactConsent(false); setPersonsFacilitiesDepartments(''); setTimeline('');
-    setPriorComplaintHistory(''); setRequestedAction(''); setSignatureDate('');
+    setPriorComplaintHistory(''); setRequestedAction(''); setSignatureDate(''); setSignatureFile(null);
     setFiles([]); setReportId(null); setAccessToken(null); setStatusNotice('');
   }, [open, regionId, catalogEntry]);
 
@@ -129,7 +131,7 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
   if (!open) return null;
   const selectedConcern = CONCERNS.find((item) => item.code === concerns[0]) ?? CONCERNS[0];
   const stepIndex = STEPS.findIndex((item) => item.id === step);
-  const canContinueFromReview = locationSharing && truthfulness && geminiConsent && signatureDate.length > 0 && observation.trim().length > 0;
+  const canContinueFromReview = reportConsent && locationSharing && truthfulness && geminiConsent && signatureDate.length > 0 && observation.trim().length > 0;
   const city = catalogEntry ?? cityForRegionId(regionId);
   const availableAuthorities = city
     ? city.routingCoverage === 'FULLY_SUPPORTED' && city.jurisdiction.authorityIds.length
@@ -185,6 +187,9 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
   const createReport = async () => {
     setCreating(true); setStatusNotice('Creating the report PDF and evidence package…');
     try {
+      if (signatureFile && !['image/jpeg', 'application/pdf'].includes(signatureFile.type)) {
+        throw new Error('The signature file must be a JPEG image or PDF.');
+      }
       const snapshots = analysis.length
         ? await Promise.all(analysis.map(makeSnapshot))
         : [await makeUnavailableSnapshot(fallbackIndicatorId)];
@@ -208,6 +213,12 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
         priorComplaintHistory: priorComplaintHistory || null,
         requestedAction: requestedAction || null,
         signatureDate,
+        signatureAttachment: signatureFile ? {
+          name: signatureFile.name,
+          mediaType: signatureFile.type,
+          bytes: signatureFile.size,
+          sha256: await digestBytes(await signatureFile.arrayBuffer()),
+        } : null,
         geminiConsent,
         observation: observation.trim(), locale: 'en',
         consent: { reviewed: true, truthfulness, locationSharing, attachmentsSharing: files.length > 0, manualSubmission: true, privacyNoticeVersion: '2026-08-05' },
@@ -217,6 +228,7 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
       const form = new FormData();
       form.append('report', JSON.stringify(payload));
       files.slice(0, 6).forEach((file) => form.append('attachments', file, file.name));
+      if (signatureFile) form.append('signature', signatureFile, signatureFile.name);
       const response = await fetch(`${config.apiBaseUrl}/api/v1/reports`, { method: 'POST', body: form, headers: { 'Idempotency-Key': `browser-${crypto.randomUUID()}` } });
       const result = await response.json() as { data?: { id: string; artifacts?: unknown[] }; meta?: { mock?: boolean }; detail?: string };
       if (!response.ok || !result.data) throw new Error(result.detail || 'The report could not be created.');
@@ -287,7 +299,29 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
           <label className="report-field"><span>Prior complaint history (optional)</span><textarea value={priorComplaintHistory} onChange={(event) => setPriorComplaintHistory(event.target.value)} maxLength={2000} rows={2} placeholder="Reference numbers or state that none are known" /></label>
           <label className="report-field"><span>Requested action (optional)</span><textarea value={requestedAction} onChange={(event) => setRequestedAction(event.target.value)} maxLength={1000} rows={2} placeholder="For example: inspect the location and advise on next steps" /></label>
           <label className="report-field"><span>Date for the printed signature</span><input type="date" value={signatureDate} onChange={(event) => setSignatureDate(event.target.value)} required /></label>
-          <div className="report-checks"><label><input type="checkbox" checked={identityConfirmation} onChange={(event) => setIdentityConfirmation(event.target.checked)} /> I confirm the identity details supplied are mine.</label><label><input type="checkbox" checked={contactConsent} onChange={(event) => setContactConsent(event.target.checked)} /> I consent to contact and verification using these details.</label><label><input type="checkbox" checked={locationSharing} onChange={(event) => setLocationSharing(event.target.checked)} /> I consent to sharing the exact map location.</label><label><input type="checkbox" checked={truthfulness} onChange={(event) => setTruthfulness(event.target.checked)} /> I reviewed this package and the observation is truthful to the best of my knowledge.</label><label><input type="checkbox" checked={geminiConsent} onChange={(event) => setGeminiConsent(event.target.checked)} /> I consent to sending the selected report text and non-identifying analysis facts to Google Gemini for drafting. Sensitive contact details and attachments are added by SPARC after drafting.</label></div>
+          <label className="report-upload report-upload--signature">
+            <span className="btn">Add signature file (optional)</span>
+            <input type="file" accept="image/jpeg,application/pdf" onChange={(event) => setSignatureFile(event.target.files?.[0] ?? null)} />
+            <small>{signatureFile ? `${signatureFile.name} · ${signatureFile.type === 'application/pdf' ? 'PDF' : 'JPEG'}` : 'JPEG or PDF · included with the report package; JPEG signatures are shown in the PDF'}</small>
+          </label>
+          <div className="report-checks">
+            <label>
+              <input
+                type="checkbox"
+                checked={reportConsent}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  setReportConsent(checked);
+                  setIdentityConfirmation(checked);
+                  setContactConsent(checked);
+                  setLocationSharing(checked);
+                  setTruthfulness(checked);
+                  setGeminiConsent(checked);
+                }}
+              />
+              I confirm the details supplied are mine, consent to sharing the exact map location and any contact details provided for verification, reviewed this package as truthful to the best of my knowledge, and consent to sending only non-identifying report text and analysis facts to Google Gemini for drafting.
+            </label>
+          </div>
           <div className="callout"><p className="callout__title">Required declaration</p><p className="callout__body">This package records an observation and request for verification. It does not prove a violation, identify a responsible party, or provide legal advice. The signature line is intentionally blank for printing.</p></div>
         </div> : null}
 

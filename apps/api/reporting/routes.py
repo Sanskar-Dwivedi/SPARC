@@ -86,6 +86,13 @@ class AttachmentMetadata(StrictModel):
     sha256: str = Field(pattern=r"^sha256:[a-f0-9]{64}$")
 
 
+class SignatureAttachment(StrictModel):
+    name: str = Field(min_length=1, max_length=120)
+    media_type: Literal["image/jpeg", "application/pdf"] = Field(alias="mediaType")
+    bytes: int = Field(gt=0, le=5 * 1024 * 1024)
+    sha256: str = Field(pattern=r"^sha256:[a-f0-9]{64}$")
+
+
 class ComplainantDetails(StrictModel):
     name: str | None = Field(default=None, max_length=160)
     organization: str | None = Field(default=None, max_length=200)
@@ -116,6 +123,7 @@ class ReportCreateRequest(StrictModel):
     prior_complaint_history: str | None = Field(default=None, alias="priorComplaintHistory", max_length=2000)
     requested_action: str | None = Field(default=None, alias="requestedAction", max_length=1000)
     signature_date: date | None = Field(default=None, alias="signatureDate")
+    signature_attachment: SignatureAttachment | None = Field(default=None, alias="signatureAttachment")
     gemini_consent: bool = Field(default=False, alias="geminiConsent")
     evidence: EvidenceSnapshot
     evidence_snapshots: list[EvidenceSnapshot] = Field(default_factory=list, alias="evidenceSnapshots", max_length=16)
@@ -218,11 +226,12 @@ async def create_report(
     idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key", max_length=128)] = None,
 ) -> Response:
     uploaded: list[tuple[str, str, bytes]] = []
+    signature_uploaded: tuple[str, str, bytes] | None = None
     normalized_attachment_metadata: list[dict[str, Any]] = []
     body: ReportCreateRequest | None = None
     is_multipart = request.headers.get("content-type", "").startswith("multipart/form-data")
     if is_multipart:
-        async with request.form(max_files=MAX_ATTACHMENTS) as form:
+        async with request.form(max_files=MAX_ATTACHMENTS + 1) as form:
             raw_report = form.get("report")
             if not isinstance(raw_report, str):
                 raise SparcError(422, "REPORT_METADATA_REQUIRED", "Multipart reports require a JSON report field.")
@@ -234,6 +243,15 @@ async def create_report(
                 if not hasattr(item, "filename") or not hasattr(item, "content_type"):
                     raise SparcError(422, "INVALID_ATTACHMENT", "Report attachments must be uploaded files.")
                 uploaded.append((item.filename or "attachment", item.content_type or "", await item.read()))
+            signature_item = form.get("signature")
+            if signature_item is not None:
+                if not hasattr(signature_item, "filename") or not hasattr(signature_item, "content_type"):
+                    raise SparcError(422, "INVALID_SIGNATURE", "The signature must be uploaded as a JPEG or PDF file.")
+                signature_uploaded = (
+                    signature_item.filename or "signature",
+                    signature_item.content_type or "",
+                    await signature_item.read(),
+                )
     else:
         try:
             body = TypeAdapter(ReportCreateRequest).validate_python(await request.json())
@@ -258,6 +276,29 @@ async def create_report(
             if not any(all(candidate[key] == declared_values[key] for key in ("name", "mediaType", "bytes", "sha256")) for candidate in (raw_actual, actual)):
                 raise SparcError(422, "ATTACHMENT_METADATA_MISMATCH", "Attachment metadata does not match the selected upload or its normalized package bytes.")
             normalized_attachment_metadata.append(actual)
+        if body.signature_attachment is None and signature_uploaded is not None:
+            raise SparcError(422, "SIGNATURE_METADATA_REQUIRED", "The signature upload requires matching signature metadata.")
+        if body.signature_attachment is not None:
+            if signature_uploaded is None:
+                raise SparcError(422, "SIGNATURE_UPLOAD_REQUIRED", "The selected signature file was not uploaded.")
+            filename, media_type, raw_bytes = signature_uploaded
+            try:
+                raw_actual = validate_attachment(media_type, raw_bytes, filename)
+                normalized = normalize_attachment(media_type, raw_bytes)
+                actual = validate_attachment(media_type, normalized, filename)
+            except EvidenceManifestError as exc:
+                raise SparcError(422, "INVALID_SIGNATURE", "The signature must be a valid JPEG or PDF under the 5 MiB limit.") from exc
+            declared_values = body.signature_attachment.model_dump(by_alias=True)
+            if not any(all(candidate[key] == declared_values[key] for key in ("name", "mediaType", "bytes", "sha256")) for candidate in (raw_actual, actual)):
+                raise SparcError(422, "SIGNATURE_METADATA_MISMATCH", "Signature metadata does not match the selected file.")
+            signature_uploaded = (actual["name"], actual["mediaType"], normalized)
+            payload_signature_metadata = actual
+        else:
+            payload_signature_metadata = None
+    else:
+        if body.signature_attachment is not None:
+            raise SparcError(422, "SIGNATURE_UPLOAD_REQUIRED", "Signature files must be sent as multipart uploads.")
+        payload_signature_metadata = None
     client_key = request.client.host if request.client else "unknown"
     if not report_limiter.allow(client_key):
         raise SparcError(429, "REPORT_RATE_LIMITED", "Too many report generations from this client.", headers={"Retry-After": "60"})
@@ -271,6 +312,7 @@ async def create_report(
         # The report payload and manifest describe the bytes that SPARC will
         # redistribute, not the pre-normalization upload bytes.
         payload["attachments"] = normalized_attachment_metadata
+    payload["signatureAttachment"] = payload_signature_metadata
     request_hash = sha256(canonical_json(payload)).hexdigest()
     if idempotency_key:
         existing = idempotency_records.get(idempotency_key)
@@ -311,7 +353,7 @@ async def create_report(
         except GeminiGenerationError as exc:
             raise SparcError(503, "GEMINI_UNAVAILABLE", str(exc)) from exc
     try:
-        artifacts = generate_artifacts(report_id="pending", payload=payload, locale=body.locale, attachments=uploaded)
+        artifacts = generate_artifacts(report_id="pending", payload=payload, locale=body.locale, attachments=uploaded, signature=signature_uploaded)
     except Exception as exc:
         raise SparcError(422, "REPORT_ARTIFACT_FAILED", "The report could not be generated safely.") from exc
 
@@ -329,7 +371,7 @@ async def create_report(
     # opaque ID exists.  This remains local and deterministic; no external call
     # or provider credential is involved.
     try:
-        final_artifacts = generate_artifacts(report_id=record.report_id, payload=payload, locale=body.locale, attachments=uploaded)
+        final_artifacts = generate_artifacts(report_id=record.report_id, payload=payload, locale=body.locale, attachments=uploaded, signature=signature_uploaded)
     except Exception as exc:
         store.delete(record.report_id, record.access_token)
         raise SparcError(422, "REPORT_ARTIFACT_FAILED", "The report could not be generated safely.") from exc

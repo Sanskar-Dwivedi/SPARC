@@ -758,7 +758,9 @@ paths:
         `geminiConsent` is explicit. When enabled, the server sends only selected
         non-identifying report text and analysis context to the configured Gemini
         provider; complainant details, contacts, attachments, exact coordinates,
-        signature and date are appended locally after drafting.
+        signature and date are appended locally after drafting. An optional
+        JPEG or PDF signature upload is retained in the evidence package;
+        JPEG signatures are also placed in the generated PDF.
       x-sparc-maturity: mock-p0
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -783,6 +785,10 @@ paths:
                   items:
                     type: string
                     format: binary
+                signature:
+                  type: string
+                  format: binary
+                  description: Optional JPEG or PDF signature uploaded separately from evidence attachments.
       responses:
         '201':
           description: Report created in ephemeral P0 storage.
