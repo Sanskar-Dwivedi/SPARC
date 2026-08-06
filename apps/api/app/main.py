@@ -27,6 +27,8 @@ from .errors import (
     sparc_error_handler,
     validation_error_handler,
 )
+from .forecast_models import ForecastHazard
+from .forecast_repository import ForecastRepository
 from .limits import FixedWindowRateLimiter
 from .middleware import RequestBodyLimitMiddleware
 from .models import ComparisonRequest, OPAQUE_ID_PATTERN, PeriodInput, validate_period_pair
@@ -35,7 +37,7 @@ from .repository import MockResultRepository, apply_request_context, envelope
 from ..reporting.routes import router as reporting_router
 
 
-APP_VERSION = "1.0.0-alpha.1"
+APP_VERSION = "1.1.0-alpha.1"
 REQUEST_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-.:][a-z0-9]+)*$")
 RegionIdPath = Annotated[
     str,
@@ -52,6 +54,7 @@ repository = (
     if settings.use_precomputed
     else MockResultRepository(settings.examples_root)
 )
+forecast_repository = ForecastRepository(settings.forecast_examples_root, settings.data_mode)
 comparison_limiter = FixedWindowRateLimiter(settings.comparison_requests_per_minute)
 hosted_on_vercel = os.getenv("VERCEL") == "1"
 
@@ -166,6 +169,18 @@ def _require_available_periods(
         )
 
 
+def _require_forecast_region(region_id: str) -> None:
+    if forecast_repository.has_region(region_id):
+        return
+    if repository.get_region(region_id) is None:
+        raise SparcError(404, "REGION_NOT_FOUND", "The requested region is not in the published catalogue.")
+    raise SparcError(
+        404,
+        "FORECAST_NOT_AVAILABLE",
+        "No forecast run is published for the requested region.",
+    )
+
+
 @app.get("/", include_in_schema=False)
 def get_root() -> Response:
     if hosted_on_vercel:
@@ -206,6 +221,102 @@ def get_region(request: Request, region_id: RegionIdPath) -> Response:
         _meta(request),
         f"/api/v1/regions/{region_id}",
         ["/api/v1/regions"],
+    )
+    return _etag_response(request, payload)
+
+
+@app.get("/api/v1/regions/{region_id}/forecast-runs", tags=["Forecasts"])
+def list_forecast_runs(
+    request: Request,
+    region_id: RegionIdPath,
+    hazard: ForecastHazard | None = Query(None),
+) -> Response:
+    _require_forecast_region(region_id)
+    runs = forecast_repository.list_runs(region_id, hazard)
+    if not runs:
+        raise SparcError(
+            404,
+            "FORECAST_NOT_AVAILABLE",
+            "No forecast run is published for the requested hazard.",
+        )
+    payload = envelope(
+        runs,
+        forecast_repository.meta(request.state.request_id),
+        f"/api/v1/regions/{region_id}/forecast-runs",
+        [
+            f"/api/v1/regions/{region_id}/forecasts/{hazard}/latest"
+            if hazard is not None
+            else f"/api/v1/regions/{region_id}/forecast-runs"
+        ],
+    )
+    return _etag_response(request, payload)
+
+
+@app.get("/api/v1/regions/{region_id}/forecasts/{hazard}/latest", tags=["Forecasts"])
+def get_latest_forecast(
+    request: Request,
+    region_id: RegionIdPath,
+    hazard: ForecastHazard,
+) -> Response:
+    _require_forecast_region(region_id)
+    data = forecast_repository.get_latest(region_id, hazard)
+    if data is None:
+        raise SparcError(
+            404,
+            "FORECAST_NOT_AVAILABLE",
+            "No latest forecast is published for the requested hazard.",
+        )
+    payload = envelope(
+        data,
+        forecast_repository.meta(request.state.request_id),
+        f"/api/v1/regions/{region_id}/forecasts/{hazard}/latest",
+        [
+            f"/api/v1/regions/{region_id}/forecast-runs",
+            f"/api/v1/regions/{region_id}/forecasts/{hazard}/{data['runId']}/timeseries",
+        ],
+    )
+    return _etag_response(request, payload)
+
+
+@app.get("/api/v1/regions/{region_id}/forecasts/{hazard}/{run_id}", tags=["Forecasts"])
+def get_forecast_run(
+    request: Request,
+    region_id: RegionIdPath,
+    hazard: ForecastHazard,
+    run_id: ResourceIdPath,
+) -> Response:
+    _require_forecast_region(region_id)
+    data = forecast_repository.get_run(region_id, hazard, run_id)
+    if data is None:
+        raise SparcError(404, "FORECAST_NOT_FOUND", "The requested forecast run is not published.")
+    payload = envelope(
+        data,
+        forecast_repository.meta(request.state.request_id),
+        f"/api/v1/regions/{region_id}/forecasts/{hazard}/{run_id}",
+        [f"/api/v1/regions/{region_id}/forecasts/{hazard}/{run_id}/timeseries"],
+    )
+    return _etag_response(request, payload)
+
+
+@app.get(
+    "/api/v1/regions/{region_id}/forecasts/{hazard}/{run_id}/timeseries",
+    tags=["Forecasts"],
+)
+def get_forecast_timeseries(
+    request: Request,
+    region_id: RegionIdPath,
+    hazard: ForecastHazard,
+    run_id: ResourceIdPath,
+) -> Response:
+    _require_forecast_region(region_id)
+    data = forecast_repository.get_timeseries(region_id, hazard, run_id)
+    if data is None:
+        raise SparcError(404, "FORECAST_NOT_FOUND", "The requested forecast time series is not published.")
+    payload = envelope(
+        data,
+        forecast_repository.meta(request.state.request_id),
+        f"/api/v1/regions/{region_id}/forecasts/{hazard}/{run_id}/timeseries",
+        [f"/api/v1/regions/{region_id}/forecasts/{hazard}/{run_id}"],
     )
     return _etag_response(request, payload)
 

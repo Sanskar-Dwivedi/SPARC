@@ -26,6 +26,25 @@ approved processing-pack change:
 python scripts/data/build_contract_pack_examples.py
 ```
 
+## Forecast prototype endpoints
+
+The API also exposes read-only flood, drought, and heat-risk forecast products
+from the versioned pack under `contracts/examples/forecasts/`:
+
+```text
+GET /api/v1/regions/{regionId}/forecast-runs
+GET /api/v1/regions/{regionId}/forecasts/{hazard}/latest
+GET /api/v1/regions/{regionId}/forecasts/{hazard}/{runId}
+GET /api/v1/regions/{regionId}/forecasts/{hazard}/{runId}/timeseries
+```
+
+The current Nagpur pack is synthetic and is marked `meta.mock=true`. The
+baseline engine is intentionally transparent, uncalibrated, and exploratory;
+it is not an official warning service. Replace the pack with region-specific
+validated inputs only after event backtesting, spatial holdouts, calibration,
+and domain review. The fixture builder is available at
+`scripts/data/build_forecast_pack.py`.
+
 The default allowed browser origins are `http://localhost:5173` and the supplied Orbital UI reference at `http://localhost:8123`. Override them with a comma-separated `SPARC_ALLOWED_ORIGINS` value. Do not use `*`.
 
 ## Optional Gemini report drafting

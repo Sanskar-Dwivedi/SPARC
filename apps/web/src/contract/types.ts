@@ -199,6 +199,121 @@ export interface Envelope<T> {
 export type DistrictSummaryResponse = Envelope<DistrictSummary>;
 export type IndicatorComparisonResponse = Envelope<IndicatorComparison>;
 
+/* Forecast contracts are kept beside the existing analytical response types
+ * so the API boundary and every forecast view share one declaration. The
+ * server publishes a point forecast plus region metadata; it does not publish
+ * a made-up raster or per-pixel forecast value. */
+export type ForecastHazard = 'flood' | 'drought' | 'heat';
+export type ForecastRunStatus = 'published' | 'stale' | 'degraded';
+export type ForecastLeadUnit = 'hours' | 'days' | 'weeks';
+export type ForecastRiskClass = 'low' | 'moderate' | 'high' | 'very-high';
+export type ForecastConfidence = 'high' | 'medium' | 'low' | 'unknown';
+export type ForecastDriverDirection = 'increases-risk' | 'decreases-risk' | 'context';
+
+export interface ForecastWindow {
+  firstValidAt: string;
+  lastValidAt: string;
+  timeZone: string;
+}
+
+export interface ForecastMetric {
+  id: string;
+  label: string;
+  value: number | null;
+  unit: string;
+}
+
+export interface ForecastDriver {
+  id: string;
+  label: string;
+  direction: ForecastDriverDirection;
+  value: number | null;
+  unit: string;
+}
+
+export interface ForecastUncertainty {
+  lower: number;
+  upper: number;
+}
+
+export interface ForecastPoint {
+  leadTime: number;
+  leadUnit: ForecastLeadUnit;
+  validAt: string;
+  probability: number;
+  riskClass: ForecastRiskClass;
+  confidence: ForecastConfidence;
+  confidenceScore: number;
+  uncertainty: ForecastUncertainty;
+  metrics: ForecastMetric[];
+  drivers: ForecastDriver[];
+  exposedPopulation: number | null;
+  notes: string[];
+}
+
+export interface ForecastSummary {
+  peakProbability: number;
+  peakValidAt: string;
+  riskClass: ForecastRiskClass;
+  confidence: ForecastConfidence;
+  dataFreshnessMinutes: number;
+  exposedPopulationEstimate: number | null;
+  exposureUnit: string;
+  keyDrivers: ForecastDriver[];
+}
+
+export interface ForecastModel {
+  modelVersion: string;
+  modelType: string;
+  calibrationStatus: 'not-calibrated' | 'pending' | 'validated';
+  validationStatus: 'not-run' | 'exploratory' | 'formal-failed' | 'formal-passed';
+  trainingDataStatus: string;
+  modelCardUrl: string | null;
+}
+
+export interface ForecastRunSummary {
+  runId: string;
+  regionId: string;
+  hazard: ForecastHazard;
+  issueTime: string;
+  latestValidAt: string;
+  status: ForecastRunStatus;
+  stale: boolean;
+  riskClass: ForecastRiskClass;
+  confidence: ForecastConfidence;
+  modelVersion: string;
+}
+
+export interface ForecastRun {
+  runId: string;
+  region: RegionRef;
+  hazard: ForecastHazard;
+  issueTime: string;
+  status: ForecastRunStatus;
+  stale: boolean;
+  forecastWindow: ForecastWindow;
+  summary: ForecastSummary;
+  points: ForecastPoint[];
+  model: ForecastModel;
+  provenance: Provenance;
+  layers: LayerDescriptor[];
+  warnings: string[];
+  disclaimer: string;
+}
+
+export interface ForecastTimeSeries {
+  region: RegionRef;
+  runId: string;
+  hazard: ForecastHazard;
+  issueTime: string;
+  points: ForecastPoint[];
+  provenance: Provenance;
+}
+
+export type ForecastRunListResponse = Envelope<ForecastRunSummary[]>;
+export type ForecastRunResponse = Envelope<ForecastRun>;
+export type ForecastTimeSeriesResponse = Envelope<ForecastTimeSeries>;
+
 /** RFC 9457 problem document. The API returns these for every failure. */
 export interface ProblemDetails {
   type: string;

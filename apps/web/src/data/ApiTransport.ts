@@ -8,12 +8,19 @@
 import type {
   ComparisonSelection,
   DistrictSummaryResponse,
+  ForecastHazard,
+  ForecastRunListResponse,
+  ForecastRunResponse,
+  ForecastTimeSeriesResponse,
   IndicatorComparisonResponse,
   RegionRef,
 } from '../contract/types';
 import {
   asProblemDetails,
   assertDistrictSummary,
+  assertForecastRun,
+  assertForecastRunList,
+  assertForecastTimeSeries,
   assertIndicatorComparison,
   ContractViolation,
 } from '../contract/validate';
@@ -126,6 +133,55 @@ export class ApiTransport implements Transport {
       this.periodQuery(selection),
     );
     return this.validated(assertIndicatorComparison, await this.request(url, signal));
+  }
+
+  async listForecastRuns(
+    regionId: string,
+    hazard?: ForecastHazard,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunListResponse> {
+    const url = this.url(
+      `/api/v1/regions/${encodeURIComponent(regionId)}/forecast-runs`,
+      hazard ? { hazard } : undefined,
+    );
+    return this.validated(assertForecastRunList, await this.request(url, signal));
+  }
+
+  async getLatestForecast(
+    regionId: string,
+    hazard: ForecastHazard,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunResponse> {
+    const url = this.url(
+      `/api/v1/regions/${encodeURIComponent(regionId)}/forecasts/${encodeURIComponent(hazard)}/latest`,
+    );
+    return this.validated(assertForecastRun, await this.request(url, signal));
+  }
+
+  async getForecastRun(
+    regionId: string,
+    hazard: ForecastHazard,
+    runId: string,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunResponse> {
+    const url = this.url(
+      `/api/v1/regions/${encodeURIComponent(regionId)}/forecasts/` +
+        `${encodeURIComponent(hazard)}/${encodeURIComponent(runId)}`,
+    );
+    return this.validated(assertForecastRun, await this.request(url, signal));
+  }
+
+  async getForecastTimeSeries(
+    regionId: string,
+    hazard: ForecastHazard,
+    runId: string,
+    signal?: AbortSignal,
+  ): Promise<ForecastTimeSeriesResponse> {
+    const url = this.url(
+      `/api/v1/regions/${encodeURIComponent(regionId)}/forecasts/` +
+        `${encodeURIComponent(hazard)}/${encodeURIComponent(runId)}/timeseries`,
+    );
+    return this.validated(assertForecastTimeSeries, await this.request(url, signal));
   }
 
   /** Turns a schema failure into a DataError so callers only handle one type. */

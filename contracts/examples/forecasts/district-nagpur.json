@@ -1,0 +1,586 @@
+{
+  "packVersion": "1",
+  "generatedAt": "2026-08-05T06:15:00Z",
+  "synthetic": true,
+  "regionAliases": {
+    "district:nagpur": ["mock:district:nagpur"]
+  },
+  "runs": [
+    {
+      "runId": "forecast-run:district-nagpur:2026-08-05t06-00-00z:flood",
+      "region": {
+        "id": "district:nagpur",
+        "name": "Nagpur district",
+        "type": "district",
+        "parentId": null,
+        "bbox": [78.25182, 20.58121, 79.66161, 21.72314],
+        "centroid": [79.08797740597822, 21.176853476440222],
+        "geometryUrl": null,
+        "indicatorIds": ["surface-water", "vegetation", "built-up"]
+      },
+      "hazard": "flood",
+      "issueTime": "2026-08-05T06:00:00Z",
+      "status": "degraded",
+      "stale": false,
+      "forecastWindow": {
+        "firstValidAt": "2026-08-05T12:00:00Z",
+        "lastValidAt": "2026-08-08T06:00:00Z",
+        "timeZone": "UTC"
+      },
+      "summary": {
+        "peakProbability": 0.7421,
+        "peakValidAt": "2026-08-08T06:00:00Z",
+        "riskClass": "very-high",
+        "confidence": "low",
+        "dataFreshnessMinutes": 75,
+        "exposedPopulationEstimate": 183000,
+        "exposureUnit": "people-estimate",
+        "keyDrivers": [
+          {
+            "id": "forecast-rainfall",
+            "label": "Accumulated forecast rainfall",
+            "direction": "increases-risk",
+            "value": 118,
+            "unit": "mm"
+          },
+          {
+            "id": "river-level",
+            "label": "River-level percentile",
+            "direction": "increases-risk",
+            "value": 88,
+            "unit": "percentile"
+          },
+          {
+            "id": "soil-moisture",
+            "label": "Antecedent soil-moisture percentile",
+            "direction": "increases-risk",
+            "value": 84,
+            "unit": "percentile"
+          }
+        ]
+      },
+      "points": [
+        {
+          "leadTime": 6,
+          "leadUnit": "hours",
+          "validAt": "2026-08-05T12:00:00Z",
+          "probability": 0.2814,
+          "riskClass": "moderate",
+          "confidence": "medium",
+          "confidenceScore": 0.68,
+          "uncertainty": {"lower": 0.19, "upper": 0.39},
+          "metrics": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "value": 18, "unit": "mm"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 72, "unit": "percentile"},
+            {"id": "river-level", "label": "River-level percentile", "value": 50, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "direction": "increases-risk", "value": 18, "unit": "mm"},
+            {"id": "soil-moisture", "label": "Antecedent soil moisture", "direction": "increases-risk", "value": 72, "unit": "percentile"}
+          ],
+          "exposedPopulation": 67000,
+          "notes": ["Prototype horizon estimate; river-gauge coverage is incomplete."]
+        },
+        {
+          "leadTime": 12,
+          "leadUnit": "hours",
+          "validAt": "2026-08-05T18:00:00Z",
+          "probability": 0.3615,
+          "riskClass": "moderate",
+          "confidence": "medium",
+          "confidenceScore": 0.66,
+          "uncertainty": {"lower": 0.24, "upper": 0.48},
+          "metrics": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "value": 38, "unit": "mm"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 76, "unit": "percentile"},
+            {"id": "river-level", "label": "River-level percentile", "value": 58, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "direction": "increases-risk", "value": 38, "unit": "mm"},
+            {"id": "river-level", "label": "River-level percentile", "direction": "increases-risk", "value": 58, "unit": "percentile"}
+          ],
+          "exposedPopulation": 83000,
+          "notes": []
+        },
+        {
+          "leadTime": 24,
+          "leadUnit": "hours",
+          "validAt": "2026-08-06T06:00:00Z",
+          "probability": 0.5482,
+          "riskClass": "high",
+          "confidence": "medium",
+          "confidenceScore": 0.64,
+          "uncertainty": {"lower": 0.39, "upper": 0.68},
+          "metrics": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "value": 62, "unit": "mm"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 79, "unit": "percentile"},
+            {"id": "river-level", "label": "River-level percentile", "value": 66, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "direction": "increases-risk", "value": 62, "unit": "mm"},
+            {"id": "river-level", "label": "River-level percentile", "direction": "increases-risk", "value": 66, "unit": "percentile"}
+          ],
+          "exposedPopulation": 124000,
+          "notes": []
+        },
+        {
+          "leadTime": 48,
+          "leadUnit": "hours",
+          "validAt": "2026-08-07T06:00:00Z",
+          "probability": 0.6718,
+          "riskClass": "high",
+          "confidence": "low",
+          "confidenceScore": 0.57,
+          "uncertainty": {"lower": 0.41, "upper": 0.79},
+          "metrics": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "value": 92, "unit": "mm"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 82, "unit": "percentile"},
+            {"id": "river-level", "label": "River-level percentile", "value": 78, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "direction": "increases-risk", "value": 92, "unit": "mm"},
+            {"id": "river-level", "label": "River-level percentile", "direction": "increases-risk", "value": 78, "unit": "percentile"}
+          ],
+          "exposedPopulation": 158000,
+          "notes": ["Confidence decreases with forecast lead time."]
+        },
+        {
+          "leadTime": 72,
+          "leadUnit": "hours",
+          "validAt": "2026-08-08T06:00:00Z",
+          "probability": 0.7421,
+          "riskClass": "very-high",
+          "confidence": "low",
+          "confidenceScore": 0.51,
+          "uncertainty": {"lower": 0.43, "upper": 0.84},
+          "metrics": [
+            {"id": "forecast-rainfall", "label": "Forecast rainfall accumulation", "value": 118, "unit": "mm"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 84, "unit": "percentile"},
+            {"id": "river-level", "label": "River-level percentile", "value": 88, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "forecast-rainfall", "label": "Accumulated forecast rainfall", "direction": "increases-risk", "value": 118, "unit": "mm"},
+            {"id": "river-level", "label": "River-level percentile", "direction": "increases-risk", "value": 88, "unit": "percentile"}
+          ],
+          "exposedPopulation": 183000,
+          "notes": ["Use official local river and emergency bulletins for action."]
+        }
+      ],
+      "model": {
+        "modelVersion": "baseline-logistic-forecast-v1.0.0",
+        "modelType": "transparent-logistic-baseline",
+        "calibrationStatus": "not-calibrated",
+        "validationStatus": "exploratory",
+        "trainingDataStatus": "synthetic-fixture",
+        "modelCardUrl": null
+      },
+      "provenance": {
+        "sources": [
+          {
+            "datasetId": "sparc-demo:synthetic-features",
+            "provider": "SPARC",
+            "mission": "Synthetic prototype input",
+            "collection": "forecast-prototype-v1",
+            "processingBaseline": null,
+            "itemIds": ["fixture:nagpur:2026-08-05"],
+            "acquiredAt": ["2026-08-05T05:00:00Z"],
+            "assetKeys": ["rainfall", "soil-moisture", "river-level"],
+            "sourceUrl": "https://sparc.example.invalid/forecast-fixture",
+            "citation": "Synthetic prototype inputs; no operational upstream acquisition is represented.",
+            "license": "SPARC project fixture; not for operational redistribution"
+          }
+        ],
+        "algorithmId": "sparc:forecast:baseline-logistic",
+        "algorithmVersion": "1.0.0",
+        "parametersHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "analysisCrs": "EPSG:4326",
+        "effectiveResolutionMeters": 1000,
+        "generatedAt": "2026-08-05T06:15:00Z"
+      },
+      "layers": [],
+      "warnings": [
+        "This run is a synthetic prototype fixture, not a live forecast.",
+        "Probabilities are not calibrated or formally validated for Nagpur.",
+        "No automatic alert, evacuation, or emergency action is implied."
+      ],
+      "disclaimer": "Decision-support prototype only. Consult the responsible meteorological, water-management, and emergency authorities for official warnings."
+    },
+    {
+      "runId": "forecast-run:district-nagpur:2026-08-05t06-00-00z:drought",
+      "region": {
+        "id": "district:nagpur",
+        "name": "Nagpur district",
+        "type": "district",
+        "parentId": null,
+        "bbox": [78.25182, 20.58121, 79.66161, 21.72314],
+        "centroid": [79.08797740597822, 21.176853476440222],
+        "geometryUrl": null,
+        "indicatorIds": ["surface-water", "vegetation", "built-up"]
+      },
+      "hazard": "drought",
+      "issueTime": "2026-08-05T06:00:00Z",
+      "status": "degraded",
+      "stale": false,
+      "forecastWindow": {
+        "firstValidAt": "2026-08-19T06:00:00Z",
+        "lastValidAt": "2026-10-28T06:00:00Z",
+        "timeZone": "UTC"
+      },
+      "summary": {
+        "peakProbability": 0.6124,
+        "peakValidAt": "2026-10-28T06:00:00Z",
+        "riskClass": "high",
+        "confidence": "low",
+        "dataFreshnessMinutes": 1440,
+        "exposedPopulationEstimate": 247000,
+        "exposureUnit": "people-estimate",
+        "keyDrivers": [
+          {
+            "id": "spi-4-week",
+            "label": "Four-week standardized precipitation index",
+            "direction": "increases-risk",
+            "value": -1.55,
+            "unit": "SPI"
+          },
+          {
+            "id": "rainfall-anomaly",
+            "label": "Rainfall anomaly",
+            "direction": "increases-risk",
+            "value": -33,
+            "unit": "percent"
+          },
+          {
+            "id": "soil-moisture",
+            "label": "Soil-moisture percentile",
+            "direction": "increases-risk",
+            "value": 20,
+            "unit": "percentile"
+          }
+        ]
+      },
+      "points": [
+        {
+          "leadTime": 2,
+          "leadUnit": "weeks",
+          "validAt": "2026-08-19T06:00:00Z",
+          "probability": 0.2218,
+          "riskClass": "moderate",
+          "confidence": "medium",
+          "confidenceScore": 0.67,
+          "uncertainty": {"lower": 0.14, "upper": 0.32},
+          "metrics": [
+            {"id": "spi-4-week", "label": "Four-week SPI", "value": -0.7, "unit": "SPI"},
+            {"id": "rainfall-anomaly", "label": "Rainfall anomaly", "value": -8, "unit": "percent"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 43, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "rainfall-anomaly", "label": "Rainfall anomaly", "direction": "increases-risk", "value": -8, "unit": "percent"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "direction": "context", "value": 43, "unit": "percentile"}
+          ],
+          "exposedPopulation": 125000,
+          "notes": ["Agricultural and hydrological drought are not separated in this prototype."]
+        },
+        {
+          "leadTime": 4,
+          "leadUnit": "weeks",
+          "validAt": "2026-09-02T06:00:00Z",
+          "probability": 0.3485,
+          "riskClass": "moderate",
+          "confidence": "medium",
+          "confidenceScore": 0.64,
+          "uncertainty": {"lower": 0.23, "upper": 0.47},
+          "metrics": [
+            {"id": "spi-4-week", "label": "Four-week SPI", "value": -1.0, "unit": "SPI"},
+            {"id": "rainfall-anomaly", "label": "Rainfall anomaly", "value": -18, "unit": "percent"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 34, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "spi-4-week", "label": "Four-week SPI", "direction": "increases-risk", "value": -1, "unit": "SPI"},
+            {"id": "rainfall-anomaly", "label": "Rainfall anomaly", "direction": "increases-risk", "value": -18, "unit": "percent"}
+          ],
+          "exposedPopulation": 171000,
+          "notes": []
+        },
+        {
+          "leadTime": 8,
+          "leadUnit": "weeks",
+          "validAt": "2026-09-30T06:00:00Z",
+          "probability": 0.5122,
+          "riskClass": "high",
+          "confidence": "low",
+          "confidenceScore": 0.57,
+          "uncertainty": {"lower": 0.35, "upper": 0.66},
+          "metrics": [
+            {"id": "spi-4-week", "label": "Four-week SPI", "value": -1.35, "unit": "SPI"},
+            {"id": "rainfall-anomaly", "label": "Rainfall anomaly", "value": -26, "unit": "percent"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 26, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "spi-4-week", "label": "Four-week SPI", "direction": "increases-risk", "value": -1.35, "unit": "SPI"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "direction": "increases-risk", "value": 26, "unit": "percentile"}
+          ],
+          "exposedPopulation": 212000,
+          "notes": ["Longer horizons are more sensitive to unmodelled rainfall and reservoir conditions."]
+        },
+        {
+          "leadTime": 12,
+          "leadUnit": "weeks",
+          "validAt": "2026-10-28T06:00:00Z",
+          "probability": 0.6124,
+          "riskClass": "high",
+          "confidence": "low",
+          "confidenceScore": 0.49,
+          "uncertainty": {"lower": 0.38, "upper": 0.76},
+          "metrics": [
+            {"id": "spi-4-week", "label": "Four-week SPI", "value": -1.55, "unit": "SPI"},
+            {"id": "rainfall-anomaly", "label": "Rainfall anomaly", "value": -33, "unit": "percent"},
+            {"id": "soil-moisture", "label": "Soil-moisture percentile", "value": 20, "unit": "percentile"}
+          ],
+          "drivers": [
+            {"id": "rainfall-anomaly", "label": "Rainfall anomaly", "direction": "increases-risk", "value": -33, "unit": "percent"},
+            {"id": "spi-4-week", "label": "Four-week SPI", "direction": "increases-risk", "value": -1.55, "unit": "SPI"}
+          ],
+          "exposedPopulation": 247000,
+          "notes": ["This is not an official drought declaration."]
+        }
+      ],
+      "model": {
+        "modelVersion": "baseline-logistic-forecast-v1.0.0",
+        "modelType": "transparent-logistic-baseline",
+        "calibrationStatus": "not-calibrated",
+        "validationStatus": "exploratory",
+        "trainingDataStatus": "synthetic-fixture",
+        "modelCardUrl": null
+      },
+      "provenance": {
+        "sources": [
+          {
+            "datasetId": "sparc-demo:synthetic-features",
+            "provider": "SPARC",
+            "mission": "Synthetic prototype input",
+            "collection": "forecast-prototype-v1",
+            "processingBaseline": null,
+            "itemIds": ["fixture:nagpur:2026-08-05"],
+            "acquiredAt": ["2026-08-05T05:00:00Z"],
+            "assetKeys": ["rainfall", "soil-moisture", "vegetation-anomaly"],
+            "sourceUrl": "https://sparc.example.invalid/forecast-fixture",
+            "citation": "Synthetic prototype inputs; no operational upstream acquisition is represented.",
+            "license": "SPARC project fixture; not for operational redistribution"
+          }
+        ],
+        "algorithmId": "sparc:forecast:baseline-logistic",
+        "algorithmVersion": "1.0.0",
+        "parametersHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "analysisCrs": "EPSG:4326",
+        "effectiveResolutionMeters": 1000,
+        "generatedAt": "2026-08-05T06:15:00Z"
+      },
+      "layers": [],
+      "warnings": [
+        "This run is a synthetic prototype fixture, not a live forecast.",
+        "Probabilities are not calibrated or formally validated for Nagpur.",
+        "Agricultural and hydrological drought are not separate products yet."
+      ],
+      "disclaimer": "Decision-support prototype only. Consult the responsible meteorological, water-management, agricultural, and emergency authorities for official information."
+    },
+    {
+      "runId": "forecast-run:district-nagpur:2026-08-05t06-00-00z:heat",
+      "region": {
+        "id": "district:nagpur",
+        "name": "Nagpur district",
+        "type": "district",
+        "parentId": null,
+        "bbox": [78.25182, 20.58121, 79.66161, 21.72314],
+        "centroid": [79.08797740597822, 21.176853476440222],
+        "geometryUrl": null,
+        "indicatorIds": ["surface-water", "vegetation", "built-up"]
+      },
+      "hazard": "heat",
+      "issueTime": "2026-08-05T06:00:00Z",
+      "status": "degraded",
+      "stale": false,
+      "forecastWindow": {
+        "firstValidAt": "2026-08-06T06:00:00Z",
+        "lastValidAt": "2026-08-15T06:00:00Z",
+        "timeZone": "UTC"
+      },
+      "summary": {
+        "peakProbability": 0.7112,
+        "peakValidAt": "2026-08-12T06:00:00Z",
+        "riskClass": "very-high",
+        "confidence": "low",
+        "dataFreshnessMinutes": 120,
+        "exposedPopulationEstimate": 296000,
+        "exposureUnit": "people-estimate",
+        "keyDrivers": [
+          {
+            "id": "air-temperature",
+            "label": "Forecast two-metre air temperature",
+            "direction": "increases-risk",
+            "value": 40.1,
+            "unit": "celsius"
+          },
+          {
+            "id": "temperature-anomaly",
+            "label": "Temperature anomaly",
+            "direction": "increases-risk",
+            "value": 3.2,
+            "unit": "celsius"
+          },
+          {
+            "id": "land-surface-temperature",
+            "label": "Observed daytime land-surface temperature",
+            "direction": "context",
+            "value": 43.1,
+            "unit": "celsius"
+          }
+        ]
+      },
+      "points": [
+        {
+          "leadTime": 1,
+          "leadUnit": "days",
+          "validAt": "2026-08-06T06:00:00Z",
+          "probability": 0.4217,
+          "riskClass": "high",
+          "confidence": "medium",
+          "confidenceScore": 0.70,
+          "uncertainty": {"lower": 0.28, "upper": 0.56},
+          "metrics": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "value": 37.4, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "value": 1.8, "unit": "celsius"},
+            {"id": "land-surface-temperature", "label": "Observed daytime land-surface temperature", "value": 43.1, "unit": "celsius"}
+          ],
+          "drivers": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "direction": "increases-risk", "value": 37.4, "unit": "celsius"},
+            {"id": "land-surface-temperature", "label": "Observed daytime land-surface temperature", "direction": "context", "value": 43.1, "unit": "celsius"}
+          ],
+          "exposedPopulation": 194000,
+          "notes": ["Land-surface temperature is not ambient air temperature."]
+        },
+        {
+          "leadTime": 3,
+          "leadUnit": "days",
+          "validAt": "2026-08-08T06:00:00Z",
+          "probability": 0.5583,
+          "riskClass": "high",
+          "confidence": "medium",
+          "confidenceScore": 0.67,
+          "uncertainty": {"lower": 0.38, "upper": 0.69},
+          "metrics": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "value": 38.6, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "value": 2.4, "unit": "celsius"},
+            {"id": "land-surface-temperature", "label": "Observed daytime land-surface temperature", "value": null, "unit": "celsius"}
+          ],
+          "drivers": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "direction": "increases-risk", "value": 38.6, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "direction": "increases-risk", "value": 2.4, "unit": "celsius"}
+          ],
+          "exposedPopulation": 231000,
+          "notes": []
+        },
+        {
+          "leadTime": 5,
+          "leadUnit": "days",
+          "validAt": "2026-08-10T06:00:00Z",
+          "probability": 0.6426,
+          "riskClass": "high",
+          "confidence": "low",
+          "confidenceScore": 0.62,
+          "uncertainty": {"lower": 0.43, "upper": 0.76},
+          "metrics": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "value": 39.2, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "value": 2.9, "unit": "celsius"},
+            {"id": "land-surface-temperature", "label": "Observed daytime land-surface temperature", "value": null, "unit": "celsius"}
+          ],
+          "drivers": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "direction": "increases-risk", "value": 39.2, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "direction": "increases-risk", "value": 2.9, "unit": "celsius"}
+          ],
+          "exposedPopulation": 268000,
+          "notes": ["Confidence is a data-quality score, not a probability of correctness."]
+        },
+        {
+          "leadTime": 7,
+          "leadUnit": "days",
+          "validAt": "2026-08-12T06:00:00Z",
+          "probability": 0.7112,
+          "riskClass": "very-high",
+          "confidence": "low",
+          "confidenceScore": 0.58,
+          "uncertainty": {"lower": 0.44, "upper": 0.82},
+          "metrics": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "value": 40.1, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "value": 3.2, "unit": "celsius"},
+            {"id": "land-surface-temperature", "label": "Observed daytime land-surface temperature", "value": null, "unit": "celsius"}
+          ],
+          "drivers": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "direction": "increases-risk", "value": 40.1, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "direction": "increases-risk", "value": 3.2, "unit": "celsius"}
+          ],
+          "exposedPopulation": 296000,
+          "notes": []
+        },
+        {
+          "leadTime": 10,
+          "leadUnit": "days",
+          "validAt": "2026-08-15T06:00:00Z",
+          "probability": 0.6554,
+          "riskClass": "high",
+          "confidence": "low",
+          "confidenceScore": 0.52,
+          "uncertainty": {"lower": 0.38, "upper": 0.79},
+          "metrics": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "value": 39.4, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "value": 2.7, "unit": "celsius"},
+            {"id": "land-surface-temperature", "label": "Observed daytime land-surface temperature", "value": null, "unit": "celsius"}
+          ],
+          "drivers": [
+            {"id": "air-temperature", "label": "Forecast two-metre air temperature", "direction": "increases-risk", "value": 39.4, "unit": "celsius"},
+            {"id": "temperature-anomaly", "label": "Temperature anomaly", "direction": "increases-risk", "value": 2.7, "unit": "celsius"}
+          ],
+          "exposedPopulation": 282000,
+          "notes": ["Forecast air temperature, observed land-surface temperature, and anomaly are separate measures."]
+        }
+      ],
+      "model": {
+        "modelVersion": "baseline-logistic-forecast-v1.0.0",
+        "modelType": "transparent-logistic-baseline",
+        "calibrationStatus": "not-calibrated",
+        "validationStatus": "exploratory",
+        "trainingDataStatus": "synthetic-fixture",
+        "modelCardUrl": null
+      },
+      "provenance": {
+        "sources": [
+          {
+            "datasetId": "sparc-demo:synthetic-features",
+            "provider": "SPARC",
+            "mission": "Synthetic prototype input",
+            "collection": "forecast-prototype-v1",
+            "processingBaseline": null,
+            "itemIds": ["fixture:nagpur:2026-08-05"],
+            "acquiredAt": ["2026-08-05T05:00:00Z"],
+            "assetKeys": ["air-temperature", "land-surface-temperature", "temperature-anomaly"],
+            "sourceUrl": "https://sparc.example.invalid/forecast-fixture",
+            "citation": "Synthetic prototype inputs; no operational upstream acquisition is represented.",
+            "license": "SPARC project fixture; not for operational redistribution"
+          }
+        ],
+        "algorithmId": "sparc:forecast:baseline-logistic",
+        "algorithmVersion": "1.0.0",
+        "parametersHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "analysisCrs": "EPSG:4326",
+        "effectiveResolutionMeters": 1000,
+        "generatedAt": "2026-08-05T06:15:00Z"
+      },
+      "layers": [],
+      "warnings": [
+        "This run is a synthetic prototype fixture, not a live forecast.",
+        "Probabilities are not calibrated or formally validated for Nagpur.",
+        "Land-surface temperature is not ambient air temperature or direct human heat exposure."
+      ],
+      "disclaimer": "Decision-support prototype only. Consult the responsible meteorological and public-health authorities for official heat guidance."
+    }
+  ]
+}

@@ -9,6 +9,10 @@
 import type {
   ComparisonSelection,
   DistrictSummaryResponse,
+  ForecastHazard,
+  ForecastRunListResponse,
+  ForecastRunResponse,
+  ForecastTimeSeriesResponse,
   IndicatorComparisonResponse,
   RegionRef,
 } from '../contract/types';
@@ -29,4 +33,27 @@ export interface Transport {
     indicatorId: string,
     signal?: AbortSignal,
   ): Promise<IndicatorComparisonResponse>;
+
+  listForecastRuns(
+    regionId: string,
+    hazard?: ForecastHazard,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunListResponse>;
+  getLatestForecast(
+    regionId: string,
+    hazard: ForecastHazard,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunResponse>;
+  getForecastRun(
+    regionId: string,
+    hazard: ForecastHazard,
+    runId: string,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunResponse>;
+  getForecastTimeSeries(
+    regionId: string,
+    hazard: ForecastHazard,
+    runId: string,
+    signal?: AbortSignal,
+  ): Promise<ForecastTimeSeriesResponse>;
 }

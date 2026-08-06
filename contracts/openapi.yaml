@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: SPARC API
-  version: 1.0.0-alpha.1
+  version: 1.1.0-alpha.1
   summary: Contract-first API for satellite-derived local environmental proxy indicators.
   description: |
     The read-only P0 demo API is implemented over immutable contract examples; live raster
@@ -20,6 +20,10 @@ info:
        anonymous live processing and remain subject to request-size, concurrency, and rate limits.
     4. Problem responses never include stack traces, filesystem paths, environment values,
        internal hostnames, credentials, tokens, signed URLs, or raw provider responses.
+
+    Forecast endpoints are read-only and currently serve a versioned prototype
+    pack. Their probabilities are transparent baseline estimates and are not
+    calibrated official warnings.
   contact:
     name: SPARC contract owner
   license:
@@ -34,6 +38,7 @@ tags:
   - name: Health
   - name: Regions
   - name: Indicators
+  - name: Forecasts
   - name: Comparisons
   - name: Layers
   - name: Processing
@@ -143,6 +148,126 @@ paths:
                     $ref: '../packages/contracts/schemas/sparc.schema.json#/$defs/ResponseMeta'
                   links:
                     $ref: '../packages/contracts/schemas/sparc.schema.json#/$defs/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/regions/{regionId}/forecast-runs:
+    get:
+      operationId: listForecastRuns
+      tags: [Forecasts]
+      summary: List published forecast runs for a region.
+      description: Returns immutable run metadata for the flood, drought, and heat prototype products.
+      x-sparc-maturity: implemented-prototype
+      parameters:
+        - $ref: '#/components/parameters/RegionId'
+        - name: hazard
+          in: query
+          required: false
+          schema:
+            $ref: '../packages/contracts/schemas/sparc.schema.json#/$defs/ForecastHazard'
+      responses:
+        '200':
+          description: Published forecast-run metadata.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '../packages/contracts/schemas/sparc.schema.json#/$defs/ForecastRunListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/regions/{regionId}/forecasts/{hazard}/latest:
+    get:
+      operationId: getLatestForecast
+      tags: [Forecasts]
+      summary: Return the latest published forecast for one hazard.
+      description: The response contains horizon points, separate probability and confidence fields, drivers, provenance, and limitations.
+      x-sparc-maturity: implemented-prototype
+      parameters:
+        - $ref: '#/components/parameters/RegionId'
+        - $ref: '#/components/parameters/ForecastHazard'
+      responses:
+        '200':
+          description: Latest forecast run.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '../packages/contracts/schemas/sparc.schema.json#/$defs/ForecastRunResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/regions/{regionId}/forecasts/{hazard}/{runId}:
+    get:
+      operationId: getForecastRun
+      tags: [Forecasts]
+      summary: Return one immutable forecast run.
+      x-sparc-maturity: implemented-prototype
+      parameters:
+        - $ref: '#/components/parameters/RegionId'
+        - $ref: '#/components/parameters/ForecastHazard'
+        - $ref: '#/components/parameters/ForecastRunId'
+      responses:
+        '200':
+          description: Forecast run with all supported horizons.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '../packages/contracts/schemas/sparc.schema.json#/$defs/ForecastRunResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/regions/{regionId}/forecasts/{hazard}/{runId}/timeseries:
+    get:
+      operationId: getForecastTimeSeries
+      tags: [Forecasts]
+      summary: Return the horizon series for one immutable forecast run.
+      x-sparc-maturity: implemented-prototype
+      parameters:
+        - $ref: '#/components/parameters/RegionId'
+        - $ref: '#/components/parameters/ForecastHazard'
+        - $ref: '#/components/parameters/ForecastRunId'
+      responses:
+        '200':
+          description: Forecast probability and metric time series.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '../packages/contracts/schemas/sparc.schema.json#/$defs/ForecastTimeSeriesResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
@@ -912,6 +1037,23 @@ components:
         type: string
         minLength: 1
         maxLength: 128
+        pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*(?::[a-z0-9]+(?:-[a-z0-9]+)*)*$'
+    ForecastHazard:
+      name: hazard
+      in: path
+      required: true
+      description: Forecast hazard resolved through the published hazard catalogue.
+      schema:
+        $ref: '../packages/contracts/schemas/sparc.schema.json#/$defs/ForecastHazard'
+    ForecastRunId:
+      name: runId
+      in: path
+      required: true
+      description: Opaque immutable forecast-run identifier.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 160
         pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*(?::[a-z0-9]+(?:-[a-z0-9]+)*)*$'
     IndicatorId:
       name: indicatorId

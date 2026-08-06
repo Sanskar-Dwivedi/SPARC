@@ -8,6 +8,10 @@ import { config, type DataMode } from '../config';
 import type {
   ComparisonSelection,
   DistrictSummaryResponse,
+  ForecastHazard,
+  ForecastRunListResponse,
+  ForecastRunResponse,
+  ForecastTimeSeriesResponse,
   IndicatorComparisonResponse,
   RegionRef,
 } from '../contract/types';
@@ -49,5 +53,39 @@ export class Repository {
     signal?: AbortSignal,
   ): Promise<IndicatorComparisonResponse> {
     return this.transport.getIndicatorComparison(selection, indicatorId, signal);
+  }
+
+  listForecastRuns(
+    regionId: string,
+    hazard?: ForecastHazard,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunListResponse> {
+    return this.transport.listForecastRuns(regionId, hazard, signal);
+  }
+
+  getLatestForecast(
+    regionId: string,
+    hazard: ForecastHazard,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunResponse> {
+    return this.transport.getLatestForecast(regionId, hazard, signal);
+  }
+
+  getForecastRun(
+    regionId: string,
+    hazard: ForecastHazard,
+    runId: string,
+    signal?: AbortSignal,
+  ): Promise<ForecastRunResponse> {
+    return this.transport.getForecastRun(regionId, hazard, runId, signal);
+  }
+
+  getForecastTimeSeries(
+    regionId: string,
+    hazard: ForecastHazard,
+    runId: string,
+    signal?: AbortSignal,
+  ): Promise<ForecastTimeSeriesResponse> {
+    return this.transport.getForecastTimeSeries(regionId, hazard, runId, signal);
   }
 }

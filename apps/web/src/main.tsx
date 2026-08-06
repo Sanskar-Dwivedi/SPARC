@@ -11,6 +11,7 @@ import './reporting/reporting.css';
 /* Last, so the interface system layers over the base dashboard styles on
    source order rather than by escalating selector weight. */
 import './system.css';
+import './forecast.css';
 import { installInteractions } from './interact';
 
 /* The one scripted piece of the motion budget (§4.3). Installed at module

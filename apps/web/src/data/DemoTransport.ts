@@ -76,6 +76,10 @@ import {
 import type {
   ComparisonSelection,
   DistrictSummaryResponse,
+  ForecastHazard,
+  ForecastRunListResponse,
+  ForecastRunResponse,
+  ForecastTimeSeriesResponse,
   IndicatorComparisonResponse,
   RegionRef,
 } from '../contract/types';
@@ -275,5 +279,42 @@ export class DemoTransport implements Transport {
       }
       throw err;
     }
+  }
+
+  /* Forecasts are not copied into the offline analysis package. Returning the
+     existing not-found state keeps demo mode honest and prevents a second,
+     frontend-owned forecast fixture from drifting away from the API. */
+  async listForecastRuns(
+    _regionId: string,
+    _hazard?: ForecastHazard,
+    _signal?: AbortSignal,
+  ): Promise<ForecastRunListResponse> {
+    throw new DataError('not-found', 'Forecasts are available through the API transport only.');
+  }
+
+  async getLatestForecast(
+    _regionId: string,
+    _hazard: ForecastHazard,
+    _signal?: AbortSignal,
+  ): Promise<ForecastRunResponse> {
+    throw new DataError('not-found', 'Forecasts are available through the API transport only.');
+  }
+
+  async getForecastRun(
+    _regionId: string,
+    _hazard: ForecastHazard,
+    _runId: string,
+    _signal?: AbortSignal,
+  ): Promise<ForecastRunResponse> {
+    throw new DataError('not-found', 'Forecasts are available through the API transport only.');
+  }
+
+  async getForecastTimeSeries(
+    _regionId: string,
+    _hazard: ForecastHazard,
+    _runId: string,
+    _signal?: AbortSignal,
+  ): Promise<ForecastTimeSeriesResponse> {
+    throw new DataError('not-found', 'Forecasts are available through the API transport only.');
   }
 }

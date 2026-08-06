@@ -12,11 +12,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { config, FROZEN_PERIODS, frozenPeriodsForRegion, type DataMode, type FrozenPeriod } from './config';
-import type { ComparisonSelection, RegionRef } from './contract/types';
+import type { ComparisonSelection, ForecastHazard, RegionRef } from './contract/types';
 import { DataError } from './data/errors';
 import { createTransport, Repository } from './data/repository';
 import { DetailScreen } from './features/DetailView';
 import { LimitationsPanel } from './features/Disclosure';
+import { ForecastDashboard } from './features/ForecastDashboard';
 import { JourneyRail, LedgerStrip, type JourneyStep } from './features/Ledger';
 import { ProvenanceDrawer } from './features/ProvenanceDrawer';
 import { Logo } from './features/Logo';
@@ -35,7 +36,10 @@ import {
 import { cityForRegionId, isValidatedCity, type CityCatalogEntry } from './catalog/cities';
 
 type Stage = 'locate' | 'period' | 'dashboard';
-type Route = { name: 'summary' } | { name: 'indicator'; indicatorId: string };
+type Route =
+  | { name: 'summary' }
+  | { name: 'indicator'; indicatorId: string }
+  | { name: 'forecast'; hazard?: ForecastHazard };
 
 type Async<T> =
   | { status: 'idle' } | { status: 'loading' }
@@ -48,6 +52,13 @@ const DEFAULT_PERIOD = FROZEN_PERIODS[0]!;
 const ORBIT_URL = '/';
 
 function parseHash(hash: string): { stage: Stage; route: Route } {
+  const forecast = /^#\/forecast(?:\/(flood|drought|heat))?(?:[?#]|$)/.exec(hash);
+  if (forecast) {
+    return {
+      stage: 'dashboard',
+      route: { name: 'forecast', hazard: forecast[1] as ForecastHazard | undefined },
+    };
+  }
   const ind = /^#\/dashboard\/([a-z0-9-]{1,64})/.exec(hash);
   if (ind?.[1]) return { stage: 'dashboard', route: { name: 'indicator', indicatorId: ind[1] } };
   if (hash.startsWith('#/dashboard')) return { stage: 'dashboard', route: { name: 'summary' } };
@@ -127,8 +138,8 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
 
   // Only fetch once the user has actually reached the dashboard.
   useEffect(() => {
-    if (stage !== 'dashboard' || (catalogCity && !cityHasValidatedPack)) {
-      if (catalogCity && !cityHasValidatedPack) setSummary({ status: 'idle' });
+    if (stage !== 'dashboard' || route.name === 'forecast' || (catalogCity && !cityHasValidatedPack)) {
+      if (route.name === 'forecast' || (catalogCity && !cityHasValidatedPack)) setSummary({ status: 'idle' });
       return;
     }
     const ac = new AbortController();
@@ -137,7 +148,7 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
       .then((r) => setSummary({ status: 'ready', value: mapSummary(r, repository.label) }))
       .catch((e: unknown) => { if (!ac.signal.aborted) setSummary({ status: 'error', error: toDataError(e) }); });
     return () => ac.abort();
-  }, [repository, selection, stage, reloadToken, catalogCity, cityHasValidatedPack]);
+  }, [repository, selection, stage, route.name, reloadToken, catalogCity, cityHasValidatedPack]);
 
   useEffect(() => {
     if (stage !== 'dashboard' || route.name !== 'indicator' || (catalogCity && !cityHasValidatedPack)) { setDetail({ status: 'idle' }); return; }
@@ -160,16 +171,18 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
      announces which indicator is in focus and the globe recolours its marker
      if it feels like it. One-way, so neither side can break the other. */
   useEffect(() => {
-    const id = route.name === 'indicator' ? route.indicatorId : null;
+    const id = stage === 'dashboard' && route.name !== 'forecast'
+      ? route.name === 'indicator' ? route.indicatorId : null
+      : null;
     dispatchEvent(new CustomEvent('sparc:indicator', { detail: { indicatorId: id } }));
-  }, [route]);
+  }, [stage, route]);
 
   /* Choropleth patch for the district in view. Sent whenever the district or
      the focused indicator changes; cleared when the panel leaves the results,
      because a patch left behind on the globe would keep asserting a selection
      that is no longer current. */
   useEffect(() => {
-    if (stage !== 'dashboard') {
+    if (stage !== 'dashboard' || route.name === 'forecast') {
       dispatchEvent(new CustomEvent('sparc:district', { detail: null }));
       return;
     }
@@ -224,6 +237,14 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
   const backToSummary = useCallback(() => {
     if (panel) setPanelNav({ stage: 'dashboard', route: { name: 'summary' } });
     else go('#/dashboard');
+  }, [panel, go]);
+  const openForecast = useCallback(() => {
+    if (panel) setPanelNav({ stage: 'dashboard', route: { name: 'forecast' } });
+    else go('#/forecast');
+  }, [panel, go]);
+  const selectForecastHazard = useCallback((hazard: ForecastHazard) => {
+    if (panel) setPanelNav({ stage: 'dashboard', route: { name: 'forecast', hazard } });
+    else go(`#/forecast/${hazard}`);
   }, [panel, go]);
   const retry = useCallback(() => setReloadToken((n) => n + 1), []);
 
@@ -280,7 +301,10 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
               if (panel) setPanelNav({ stage: 'dashboard', route: { name: 'summary' } });
               else go('#/dashboard');
             }}
-            onBack={() => setNav({ stage: 'locate', route: { name: 'summary' } })}
+            onBack={() => {
+              const next = { stage: 'locate' as Stage, route: { name: 'summary' as const } };
+              if (panel) setPanelNav(next); else setNav(next);
+            }}
           />
         )}
       </div>
@@ -329,9 +353,12 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
       <header className="topbar">
         <div className="brand">
           <Logo />
-          <span className="brand__sub">{regionName} · {fallbackCity ? 'Report/export scope' : period.label}</span>
+          <span className="brand__sub">{regionName} · {route.name === 'forecast' ? 'Hazard outlook' : fallbackCity ? 'Report/export scope' : period.label}</span>
         </div>
         <div className="topbar__actions">
+          <button type="button" className="btn" onClick={route.name === 'forecast' ? backToSummary : openForecast}>
+            {route.name === 'forecast' ? 'Analysis' : 'Forecasts'}
+          </button>
           <button
             type="button" className="btn"
             onClick={() => (panel
@@ -354,8 +381,8 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
       <JourneyRail current={step} />
       </div>
 
-      <main id="main" ref={mainRef} tabIndex={-1} className="main">
-        {fallbackCity ? (
+      <main id="main" ref={mainRef} tabIndex={-1} className={`main${route.name === 'forecast' ? ' main--forecast' : ''}`}>
+        {fallbackCity && route.name !== 'forecast' ? (
           <FallbackCityView city={fallbackCity} onReport={() => setReportOpen(true)} />
         ) : route.name === 'summary' ? (
           summary.status === 'loading' || summary.status === 'idle' ? (
@@ -376,6 +403,19 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
               onReport={() => setReportOpen(true)}
             />
           )
+        ) : route.name === 'forecast' ? (
+          <ForecastDashboard
+            repository={repository}
+            regionId={regionId}
+            regionName={regionName}
+            dataMode={dataMode}
+            reloadToken={reloadToken}
+            initialHazard={route.hazard}
+            onHazardChange={selectForecastHazard}
+            onRetry={retry}
+            onBack={backToSummary}
+            onUseApi={dataMode === 'demo' ? () => setDataMode('api') : undefined}
+          />
         ) : detail.status === 'loading' || detail.status === 'idle' ? (
           <LoadingView what="the indicator result" />
         ) : detail.status === 'error' ? (
@@ -400,7 +440,7 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
           />
         )}
 
-        <LimitationsPanel />
+        {route.name !== 'forecast' ? <LimitationsPanel /> : null}
       </main>
 
       <footer className="foot">

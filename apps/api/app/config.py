@@ -11,6 +11,7 @@ from pathlib import Path
 class Settings:
     repo_root: Path
     examples_root: Path
+    forecast_examples_root: Path
     precomputed_examples_root: Path
     precomputed_root: Path
     earth_engine_reports_root: Path
@@ -59,6 +60,7 @@ class Settings:
         return cls(
             repo_root=repo_root,
             examples_root=repo_root / "contracts" / "examples",
+            forecast_examples_root=repo_root / "contracts" / "examples" / "forecasts",
             precomputed_examples_root=repo_root / "contracts" / "examples" / "precomputed",
             precomputed_root=repo_root / "data" / "processed" / "prepublication-packs",
             earth_engine_reports_root=repo_root / "data" / "processed" / "earth-engine-p0",

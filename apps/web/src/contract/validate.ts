@@ -15,6 +15,9 @@ import Ajv2020, { type ErrorObject, type ValidateFunction } from 'ajv/dist/2020'
 import schema from '@contract/sparc.schema.json';
 import type {
   DistrictSummaryResponse,
+  ForecastRunListResponse,
+  ForecastRunResponse,
+  ForecastTimeSeriesResponse,
   IndicatorComparisonResponse,
   ProblemDetails,
 } from './types';
@@ -80,6 +83,30 @@ export function assertIndicatorComparison(payload: unknown): IndicatorComparison
     'IndicatorComparisonResponse',
     payload,
     'Indicator comparison response',
+  );
+}
+
+export function assertForecastRunList(payload: unknown): ForecastRunListResponse {
+  return assertShape<ForecastRunListResponse>(
+    'ForecastRunListResponse',
+    payload,
+    'Forecast run list response',
+  );
+}
+
+export function assertForecastRun(payload: unknown): ForecastRunResponse {
+  return assertShape<ForecastRunResponse>(
+    'ForecastRunResponse',
+    payload,
+    'Forecast run response',
+  );
+}
+
+export function assertForecastTimeSeries(payload: unknown): ForecastTimeSeriesResponse {
+  return assertShape<ForecastTimeSeriesResponse>(
+    'ForecastTimeSeriesResponse',
+    payload,
+    'Forecast time-series response',
   );
 }
 
