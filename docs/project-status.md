@@ -10,7 +10,7 @@ This is an evidence-based delivery status, not a percentage derived from line co
 | Stage | Status | Evidence | Exit condition |
 |---|---|---|---|
 | 1. Contract and safe offline API | Substantially complete | OpenAPI/schema tests pass; FastAPI serves only allowlisted bounded fixtures with safe errors | Stable immutable artifacts can be served through the same contract without weakening safety |
-| 2. Boundary and P0 evidence | Complete for the requested city set, with explicit limits | Fourteen boundary gates pass; 36 Earth Engine Sentinel-2 tasks completed in project `project-b44b6a9b-cafb-4d19-8dd`; all 36 CSVs passed the guarded importer. Water is an estimated surface-water change; the contradictory Nagpur built-up result remains unavailable. Formal independent validation is intentionally deferred. | Method conflicts remain withheld, provenance/limitations are visible, and no unsupported legal or causal claim is made |
+| 2. Boundary and P0 evidence | Complete for the requested city set, with explicit limits | Fourteen boundary gates pass; 36 Earth Engine Sentinel-2 tasks completed in project `project-b44b6a9b-cafb-4d19-8dd`; all 36 CSVs passed the guarded importer. Water is an estimated surface-water change; Nagpur built-up uses the approved constrained-NDBI result with built-IBI retained as sensitivity evidence. Formal independent validation is intentionally deferred. | Unresolved method conflicts elsewhere remain withheld, provenance/limitations are visible, and no unsupported legal or causal claim is made |
 | 3. Result packaging and API integration | Complete for the current P0 data slice; release review remains | Twelve expansion packs plus the three existing district packs are schema-checked; 60 static contract examples and a SHA-256 manifest are generated; API precomputed mode indexes all 15 regions; repository tests pass (116) | Review/commit the generated fixtures and verify the release bundle; no request-time raster work |
 | 4. Analytical dashboard | Substantially complete; product polish remains | `apps/web/` provides the location → period → summary → indicator journey for all packaged cities, neutral estimate terminology, reporting workflow shell, disclosures, non-WebGL path, and API/offline transports | Globe-to-panel journey, reporting wizard polish, approved layer/static assets, and accessibility/localization review |
 | 5. Offline release and rehearsal | Started | The built bundle is served at `/app/` by `apps/web/serve.mjs`; demo, API recovery, viewport, keyboard, and static-server checks pass | Primary and backup journeys work from a frozen local HTTP release with offline, accessibility, security, and evidence checks |
@@ -49,27 +49,27 @@ The following is a planning estimate for an honest P0 hackathon candidate, not a
 
 | Workstream | Approximate readiness | Why it is not further along |
 |---|---:|---|
-| Boundary and processing foundation | 95% | All requested boundaries and 36 Earth Engine tasks are complete; formal scientific validation remains intentionally deferred and the Nagpur built-proxy reversal remains withheld |
+| Boundary and processing foundation | 95% | All requested boundaries and 36 Earth Engine tasks are complete; formal scientific validation remains intentionally deferred and Nagpur's alternate built-proxy sensitivity remains disclosed |
 | Contract and API | 82% | Reporting and analytical contracts, the immutable precomputed-pack adapter, 60 generated fixtures, and checksum manifest are tested; deployment packaging and release review remain |
 | Analytical frontend | 88% | The dashboard now consumes all 15 packaged district responses offline and through API mode; approved layer assets and Claude reporting polish remain |
 | Integration, offline bundle, and release verification | 55% | The production build passes and the single globe-led server is wired, but full release rehearsal, layer assets, handoff flow, and assistive-technology review remain |
 | **Overall P0 hackathon candidate** | **about 78%** | Data and contract integration is in place; release QA, reporting polish, layer assets, and presentation rehearsal are the remaining gates |
 
-Roughly **20–25% remains** before an honest hackathon P0 candidate. Formal validation is not on the critical hackathon path; unsupported claims, the contradictory built-up result, reporting handoff, approved layers, offline rehearsal, and presentation quality remain the practical gates.
+Roughly **20–25% remains** before an honest hackathon P0 candidate. Formal validation is not on the critical hackathon path; unsupported claims, quality review, reporting handoff, approved layers, offline rehearsal, and presentation quality remain the practical gates.
 
 ## What exists today
 
 ### Processing and evidence
 
 - Validated prototype district AOIs: Nagpur, Bengaluru Urban, and Mumbai City from geoBoundaries India ADM2, with source-specific ODbL handling and the non-authoritative-boundary disclaimer.
-- Precomputed Sentinel-2 P0 summaries for all 14 catalog cities, plus the existing Nagpur/Bengaluru Urban/Mumbai City compatibility packs. The Nagpur built-up candidate remains unavailable because its methods reverse direction.
-- The API and browser view-model both suppress Nagpur built-up metrics; direct indicator requests return an explicit `unavailable` state with the method-conflict reason.
+- Precomputed Sentinel-2 P0 summaries for all 14 catalog cities, plus the existing Nagpur/Bengaluru Urban/Mumbai City compatibility packs. Nagpur built-up uses the approved constrained-NDBI default.
+- The API and browser expose the Nagpur built-up metrics; the built-IBI alternate remains attached as sensitivity evidence and does not replace the selected source.
 - Vegetation threshold sensitivity at NDVI 0.20, 0.30, and 0.40. Its net green-cover proxy change ranges from −27.03 km² to −487.10 km², so the default result remains `quality: unknown`.
 - Water pooled-Otsu sensitivity: fixed-zero and pooled-Otsu outputs both show net loss (−8.50 and −10.16 km²), but this is not independent validation.
-- Built-proxy IBI v2 sensitivity: the constrained-NDBI default shows +158.47 km² while IBI shows −361.52 km². This material reversal blocks any built-change finding; the Nagpur built-up output remains unavailable.
+- Built-proxy IBI v2 sensitivity: the approved constrained-NDBI default shows +158.47 km² while IBI shows −361.52 km². The alternate direction is disclosed as sensitivity evidence; the approved NDBI result remains the selected estimate and retains `quality: unknown` until independent validation.
 - Bengaluru Urban sensitivity evidence is complete but is not validation: water is positive under the fixed-zero (+9.22 km²) and pooled-Otsu (+96.17 km²) rules; vegetation is positive at NDVI 0.20/0.30/0.40 (+30.51/+58.03/+51.76 km²); and the constrained-NDBI/IBI built diagnostics are both negative (−79.18/−5.08 km²). The magnitude differences remain material and every result remains `quality: unknown` until independent reference validation.
 - A blinded, 100-point exploratory Nagpur vegetation label frame and controlled label template. It contains no independent labels and is not a validation result.
-- Two separate blinded, 100-point exploratory built-up frames with checksum metadata: constrained-NDBI default (`04d61db1…e58686a7`) and IBI v2 (`a3f3e6a3…5b33958`). Their template gate verifies the declared rule but not environmental accuracy. They have no independent labels and do not resolve the built-method blocker.
+- Two separate blinded, 100-point exploratory built-up frames with checksum metadata: constrained-NDBI default (`04d61db1…e58686a7`) and IBI v2 (`a3f3e6a3…5b33958`). Their template gate verifies the declared rule but not environmental accuracy. They have no independent labels, so the selected result remains `quality: unknown`.
 - Local v2 precomputed packs are generated for all 14 expansion cities plus the three compatibility districts. The API adapter generates 60 contract examples with a SHA-256 manifest, and the runtime API serves those static artifacts in `SPARC_DATA_MODE=precomputed`; raw CSVs, validated reports, and source packs remain separated under the ignored processing workspace.
 
 ### Server and contract
@@ -106,12 +106,12 @@ The dashboard's non-WebGL path remains available inside the panel. `orbital-webs
 | P0 | Actual approved child-region drill-down | Hingna remains unapproved; the interface correctly states district-only scope until a separate boundary/data gate passes |
 | P1, not P0 | Time series, LST/SUHI, live processing controls, and 3D data overlays | Keep these out of the core demo until real P0 results and release gates are stable |
 
-The primary dashboard uses concise estimate terminology. Source dataset, acquisition periods, method version, thresholds, boundary provenance, processing date, quality status, and limitations remain available in methodology/provenance views. The contradictory Nagpur built-up result must remain unavailable.
+The primary dashboard uses concise estimate terminology. Source dataset, acquisition periods, selected method version, thresholds, boundary provenance, processing date, quality status, and limitations remain available in methodology/provenance views. Nagpur's built-IBI alternate remains visible as sensitivity evidence while constrained-NDBI supplies the selected estimate.
 
 ## Remaining data and release gates
 
 1. Review and commit the generated contract examples and manifest for the offline browser bundle.
-2. Keep the contradictory Nagpur built-up result unavailable; expose the water output only as an estimated surface-water change and keep reporting language neutral.
+2. Keep constrained-NDBI as the selected Nagpur built-up source; expose the water output only as an estimated surface-water change and keep reporting language neutral.
 3. Add the Bengaluru backup journey and approved layer/static alternatives.
 4. Have Claude polish the integrated wizard, consume the jurisdiction registry, add acknowledgement tracking, and complete accessibility/localization tests.
 5. Run integrated offline, security, accessibility, presentation, and Q&A rehearsal gates.
@@ -140,9 +140,10 @@ the single globe-led experience at `http://localhost:8123/`; selecting a
 location opens the analytical panel over the globe. `/app/` is retained only as
 a redirect for old bookmarks, while `/app/*` serves panel assets. Offline and
 API precomputed modes now expose the same 15 packaged regions. Water may be
-presented as an estimated surface-water change. The contradictory Nagpur
-built-up methods reverse direction and remain unavailable; all other packs
-retain quality status unknown and documented limitations. Formal preregistration,
+presented as an estimated surface-water change. Nagpur built-up uses the
+approved constrained-NDBI estimate while the built-IBI alternate remains
+visible as sensitivity evidence; all packs retain quality status unknown and
+documented limitations. Formal preregistration,
 blinded sampling, independent labels, and publication-level accuracy metrics are
 explicitly deferred for the hackathon track.
 

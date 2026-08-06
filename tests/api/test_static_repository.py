@@ -32,8 +32,8 @@ class StaticRepositoryTests(unittest.TestCase):
         })
         built = repository.get_indicator("district:nagpur", "built-up")
         assert built is not None
-        self.assertEqual(built["data"]["status"], "unavailable")
-        self.assertIsNone(built["data"]["metric"]["absoluteChange"])
+        self.assertEqual(built["data"]["status"], "complete")
+        self.assertAlmostEqual(built["data"]["metric"]["absoluteChange"], 158.4709068373673)
         mumbai = repository.get_indicator("district:mumbai-city", "built-up")
         assert mumbai is not None
         self.assertEqual(mumbai["data"]["status"], "complete")

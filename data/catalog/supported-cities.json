@@ -39,10 +39,10 @@
           "built-up": "district-nagpur-built-up.json"
         },
         "checksums": {
-          "summary": "sha256:9abef8b49340dc25e302e1d7f275a0e78ced1d4c28102715269598b6d027a4ca",
+          "summary": "sha256:7dc0d2203c118c8434ff5c5cac7cec055bc8a6fdd85c382b0b241fc3cabc9343",
           "surface-water": "sha256:c6b543cb25c850bb971d6faf4847a11650acbb7a2835ded976b10e099520a5b0",
           "vegetation": "sha256:d26a934c65c2ae09cdcca2dc69525d545226a9d9a2e227c2ed2dc193419dc3fc",
-          "built-up": "sha256:27c651d1103c774a3a599b11d553a0a7daf30e1b8b373eeb70c9a95428b6ba08"
+          "built-up": "sha256:62e3522dcc4cab6d955e1d728b36acae03ef84063c2fa6cba3fd3312b0c08dcf"
         },
         "boundarySha256": "sha256:f811022adbe26c7634ba4d884db3251c53bd2d23b8d55e18f6d24fe3cb3b2b33"
       },

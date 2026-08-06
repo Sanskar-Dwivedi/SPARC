@@ -61,7 +61,7 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(body["data"]["region"]["id"], "mock:district:nagpur")
         self.assertIn("etag", response.headers)
 
-    async def test_nagpur_built_up_conflict_is_withheld_at_api_boundary(self) -> None:
+    async def test_nagpur_built_up_uses_approved_default_method_at_api_boundary(self) -> None:
         summary = await self.client.get(
             "/api/v1/regions/mock:district:nagpur/summary", params=PERIOD_QUERY
         )
@@ -69,9 +69,9 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
             item for item in summary.json()["data"]["indicators"]
             if item["indicator"]["id"] == "built-up"
         )
-        self.assertEqual(built_summary["status"], "unavailable")
-        self.assertIsNone(built_summary["metric"]["absoluteChange"])
-        self.assertIn("reverse direction", built_summary["metric"]["unavailableReason"])
+        self.assertEqual(built_summary["status"], "complete")
+        self.assertEqual(built_summary["metric"]["absoluteChange"], 23.5)
+        self.assertIsNone(built_summary["metric"]["unavailableReason"])
 
         detail = await self.client.get(
             "/api/v1/regions/mock:district:nagpur/indicators/built-up",
@@ -79,9 +79,9 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(detail.status_code, 200, detail.text)
         data = detail.json()["data"]
-        self.assertEqual(data["status"], "unavailable")
-        self.assertIsNone(data["metric"]["comparisonValue"])
-        self.assertIn("reverse direction", data["interpretation"]["summary"])
+        self.assertEqual(data["status"], "complete")
+        self.assertEqual(data["metric"]["comparisonValue"], 168.5)
+        self.assertNotIn("reverse direction", data["interpretation"]["summary"])
 
     async def test_etag_returns_not_modified(self) -> None:
         first = await self.client.get("/api/v1/regions")

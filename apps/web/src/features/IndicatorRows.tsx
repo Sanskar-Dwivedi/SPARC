@@ -12,10 +12,10 @@
  *    Space are one code path and a screen reader is told the state. Hover is
  *    additive styling only; nothing is revealed by hover alone.
  *
- * 2. A contested finding does not get to look confident (§3.1, §5). When the
- *    metric is unavailable — the Nagpur built-up reversal is the live case —
- *    the row switches to the caution signal and the expanded panel leads with
- *    the caveat. The number does not appear above its own reason.
+ * 2. A missing finding does not get to look confident (§3.1, §5). When a
+ *    metric is unavailable, the row switches to the caution signal and the
+ *    expanded panel leads with the caveat. The number does not appear above
+ *    its own reason.
  *
  * 3. The evidence is fetched, not invented. The summary payload does not carry
  *    threshold sensitivity, scene counts or coverage; those live on the

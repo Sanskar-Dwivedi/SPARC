@@ -17,7 +17,9 @@
 
 - The React/Vite dashboard and FastAPI contract service exist for the bounded offline path.
 - Earth Engine processing outputs and validated district boundary packages exist locally.
-- Nagpur, Bengaluru Urban, and Mumbai City precomputed packs exist; Nagpur built-up remains unavailable because its methods reverse direction.
+- Nagpur, Bengaluru Urban, and Mumbai City precomputed packs exist; Nagpur
+  built-up uses the approved constrained-NDBI result with built-IBI retained as
+  sensitivity evidence.
 - No business demand, customer, revenue, cloud deployment or 3D asset compatibility has been validated.
 
 Formal academic validation is deferred for the hackathon track. The presentation must not invent accuracy, ground truth, legal verification, responsibility or causation.

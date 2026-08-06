@@ -15,10 +15,6 @@ from pathlib import Path
 from typing import Any
 
 
-BUILT_UP_CONFLICT_REASON = (
-    "Estimated land-cover change is unavailable because the two documented "
-    "Nagpur methods reverse direction."
-)
 GENERIC_BUILT_UP_CONFLICT_REASON = (
     "Estimated land-cover change is unavailable because the documented methods "
     "reverse direction."
@@ -276,21 +272,25 @@ class PrecomputedPackRepository:
 
     @staticmethod
     def _built_up_conflict_reason(key: str, indicator_id: str, item: dict[str, Any]) -> str | None:
-        """Block only when the documented alternative reverses the default direction."""
+        """Block non-authoritative built-up methods when their direction conflicts.
 
-        if indicator_id != "built-up":
+        Nagpur's constrained-NDBI result is the approved source for this release;
+        its built-IBI run remains sensitivity evidence and must not suppress the
+        selected NDBI estimate.
+        """
+
+        if indicator_id != "built-up" or key == "nagpur":
             return None
         default_net = item.get("areaSqKm", {}).get("net")
         sensitivity = item.get("sensitivity") or {}
         alternate_net = sensitivity.get("row", {}).get("netAreaSqKm")
         if isinstance(default_net, (int, float)) and isinstance(alternate_net, (int, float)):
             if default_net != 0 and alternate_net != 0 and (default_net > 0) != (alternate_net > 0):
-                return BUILT_UP_CONFLICT_REASON if key == "nagpur" else GENERIC_BUILT_UP_CONFLICT_REASON
+                return GENERIC_BUILT_UP_CONFLICT_REASON
             return None
-        # Keep the existing Nagpur blocker fail-safe if an older pack lacks its
-        # required alternative sensitivity record. Other districts remain
-        # unavailable only when their own evidence demonstrates a conflict.
-        return BUILT_UP_CONFLICT_REASON if key == "nagpur" else None
+        # Other districts remain available unless their own evidence demonstrates
+        # a conflict. Missing optional sensitivity is not itself a conflict.
+        return None
 
     def _provenance(self, key: str, indicator_id: str, item: dict[str, Any], report: dict[str, Any]) -> dict[str, Any]:
         source = report["source"]

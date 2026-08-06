@@ -163,7 +163,7 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
     methodVersion: '1.0.0', processingRunId: `dashboard:${regionId}`,
     evidenceSha256: await digest(JSON.stringify(item)), qualityStatus: item.qualityLevel,
     validationStatus: 'EXPLORATORY_ONLY' as const, qualityLevel: item.qualityLevel,
-    methodsConflict: item.id === 'built-up' && /nagpur/i.test(regionId),
+    methodsConflict: false,
   });
 
   const fallbackIndicatorId = concerns.includes('VEGETATION_LOSS') ? 'vegetation'

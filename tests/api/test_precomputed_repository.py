@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import unittest
 
-from apps.api.app.precomputed_repository import BUILT_UP_CONFLICT_REASON, PrecomputedPackRepository
+from apps.api.app.precomputed_repository import PrecomputedPackRepository
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -61,14 +61,17 @@ class PrecomputedRepositoryTests(unittest.TestCase):
         self.assertFalse(summary["meta"]["mock"])
         self.assertEqual(summary["meta"]["dataMode"], "cache")
 
-    def test_nagpur_built_up_conflict_remains_unavailable(self) -> None:
+    def test_nagpur_built_up_uses_approved_constrained_ndbi_result(self) -> None:
         summary = self.repository.get_summary("district:nagpur")
         detail = self.repository.get_indicator("district:nagpur", "built-up")
         assert summary is not None and detail is not None
         built = next(item for item in summary["data"]["indicators"] if item["indicator"]["id"] == "built-up")
-        self.assertEqual(built["status"], "unavailable")
-        self.assertEqual(built["metric"]["unavailableReason"], BUILT_UP_CONFLICT_REASON)
-        self.assertIsNone(detail["data"]["metric"]["absoluteChange"])
+        self.assertEqual(built["status"], "complete")
+        self.assertAlmostEqual(built["metric"]["baselineValue"], 613.1184353159206)
+        self.assertAlmostEqual(built["metric"]["comparisonValue"], 771.5893421532879)
+        self.assertAlmostEqual(detail["data"]["metric"]["absoluteChange"], 158.4709068373673)
+        self.assertIsNone(detail["data"]["metric"]["unavailableReason"])
+        self.assertEqual(detail["data"]["quality"]["methodVersion"], "p0-constrained-ndbi-v1")
 
     def test_provenance_contains_actual_scene_ids_and_method(self) -> None:
         detail = self.repository.get_indicator("district:nagpur", "surface-water")
