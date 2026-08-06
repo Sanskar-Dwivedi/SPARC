@@ -237,12 +237,13 @@ export function mount(
   observer.observe(host);
 
   /* ── frame loop ────────────────────────────────────────────────────────── */
-  const clock = new THREE.Clock();
+  const timer = new THREE.Timer();
   let raf = 0;
 
-  function tick() {
+  function tick(timestamp?: number) {
     raf = requestAnimationFrame(tick);
-    const dt = Math.min(clock.getDelta(), 0.05);
+    timer.update(timestamp);
+    const dt = Math.min(timer.getDelta(), 0.05);
 
     // Reduced motion: no idle drift. The globe still responds to a deliberate
     // drag, but it does not move on its own.

@@ -2,24 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "vercel-output",
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "app/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    }
-  ],
-  "env": {
-    "VITE_DATA_MODE": "demo",
-    "VITE_API_BASE_URL": "same-origin"
-  },
   "functions": {
     "api/index.py": {
       "maxDuration": 30

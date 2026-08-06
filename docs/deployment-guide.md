@@ -1,8 +1,8 @@
 # SPARC deployment guide
 
-**Status:** Vercel bundle build verified; corrected preview deployed; production promotion requires an explicit release approval
+**Status:** Local deployment only; Vercel deployment intentionally deferred
 **Primary profile:** local HTTP, precomputed result packs
-**Cloud profile:** Vercel static dashboard plus FastAPI function (P0 limitations apply)
+**Cloud profile:** Deferred; no cloud deployment is part of the current release
 
 ## 1. Current-state warning
 
@@ -10,8 +10,8 @@ The repository now contains a Vite dashboard, FastAPI function entrypoint, preco
 
 - `npm run vercel-build` and the API/dashboard tests have been run locally.
 - `vercel.json`, `package.json`, `scripts/vercel/assemble.mjs`, `api/index.py`, and `requirements.txt` define the cloud build.
-- A corrected Vercel preview has built successfully; preview URLs may be protected by Vercel Authentication.
-- Production report creation still requires `GEMINI_API_KEY` to be configured in Vercel Project Settings if Gemini drafting is enabled.
+- Vercel configuration remains in the repository as an optional historical path; it is not an active release target.
+- Local report creation requires the FastAPI service and a server-side `GEMINI_API_KEY` when Gemini drafting is selected.
 - Contract mocks must not be labelled as real satellite findings.
 
 The local runbook remains the recovery path and must be kept runnable even when the cloud deployment is unavailable.

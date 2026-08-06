@@ -1408,16 +1408,17 @@ function onResize() {
 addEventListener('resize', onResize);
 
 /* ── frame loop ─────────────────────────────────────────────────────────── */
-const clock = new THREE.Clock();
+const timer = new THREE.Timer();
 let fpsAcc = performance.now(), fpsFrames = 0;
 const tmpV = new THREE.Vector3();
 const _UP = new THREE.Vector3(0, 1, 0);
 const AXIS = new THREE.Vector3(0, 1, 0).applyAxisAngle(new THREE.Vector3(0, 0, 1), AXIAL_TILT);
 
-function tick() {
+function tick(timestamp) {
   requestAnimationFrame(tick);
-  const dt = Math.min(clock.getDelta(), 0.05);
-  const t = clock.elapsedTime;
+  timer.update(timestamp);
+  const dt = Math.min(timer.getDelta(), 0.05);
+  const t = timer.getElapsed();
 
   /* earth + clouds */
   const spinDelta = SPIN * dt;

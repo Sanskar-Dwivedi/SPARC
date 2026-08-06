@@ -2,6 +2,8 @@
 
 **Satellite-Powered Analytics for Resource Conservation**
 
+**Live site:** [sparc-git-main-sanskars-projects-31a9e8dd.vercel.app](https://sparc-git-main-sanskars-projects-31a9e8dd.vercel.app/)
+
 SPARC is a district-level environmental decision-support prototype. It turns open Earth-observation data into understandable before/after signals for local administrators, NGOs, communities, CSR teams, and environmental practitioners.
 
 SPARC outputs are **satellite-derived SDG proxy indicators**, not official UN SDG indicators. They show observed spatial or temporal patterns and do not establish causation.

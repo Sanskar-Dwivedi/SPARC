@@ -8,7 +8,7 @@ const repoRoot = path.resolve(here, '..', '..');
 const configuredBase = process.env.VITE_BASE_PATH?.trim();
 const base = configuredBase
   ? (configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`)
-  : process.env.VERCEL === '1' ? '/' : '/app/';
+  : '/app/';
 
 export default defineConfig({
   // Relative base so a built bundle works from any path on the offline demo
@@ -16,8 +16,8 @@ export default defineConfig({
   // Absolute, because the panel bundle is loaded by the globe page at '/' while
   // its own chunks and textures live under '/app/'. A relative base would make
   // the browser look for them at the site root.
-  // The combined local server mounts this panel at /app/. A standalone
-  // Vercel dashboard is served from the domain root and sets VITE_BASE_PATH=/.
+  // The combined local and hosted site mounts this panel at /app/. A separate
+  // standalone dashboard can opt into / with VITE_BASE_PATH=/.
   base,
   plugins: [react()],
   resolve: {
@@ -40,6 +40,9 @@ export default defineConfig({
       '@validated': path.resolve(
         repoRoot, 'data', 'validated', 'boundaries', 'geoBoundaries-IND-ADM2-76128533',
       ),
+      '@global-boundaries': path.resolve(
+        repoRoot, 'data', 'validated', 'boundaries', 'global',
+      ),
       '@boundaries': path.resolve(
         repoRoot, 'data', 'metadata', 'boundaries', 'geoBoundaries-IND-ADM2-76128533',
       ),
@@ -53,7 +56,9 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Public production artifacts must not expose the original source tree.
+    // Developers can opt into maps for a controlled diagnostic build.
+    sourcemap: process.env.VITE_SOURCEMAP === '1',
     rollupOptions: {
       output: {
         // Stable names: orbital-website/index.html references these by hand and

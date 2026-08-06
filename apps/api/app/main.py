@@ -6,6 +6,7 @@ from copy import deepcopy
 from datetime import date
 import hashlib
 import json
+import os
 import re
 from typing import Annotated, Literal
 from uuid import uuid4
@@ -52,13 +53,15 @@ repository = (
     else MockResultRepository(settings.examples_root)
 )
 comparison_limiter = FixedWindowRateLimiter(settings.comparison_requests_per_minute)
+hosted_on_vercel = os.getenv("VERCEL") == "1"
 
 app = FastAPI(
     title="SPARC API",
     summary="Read-only environmental proxy indicator API",
     version=APP_VERSION,
-    docs_url="/docs",
+    docs_url=None if hosted_on_vercel else "/docs",
     redoc_url=None,
+    openapi_url=None if hosted_on_vercel else "/openapi.json",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -165,6 +168,8 @@ def _require_available_periods(
 
 @app.get("/", include_in_schema=False)
 def get_root() -> Response:
+    if hosted_on_vercel:
+        return JSONResponse({"service": "SPARC API", "status": "ok"})
     return RedirectResponse("/docs")
 
 

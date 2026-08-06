@@ -28,7 +28,8 @@ function readDataMode(raw: string | undefined): DataMode {
 }
 
 function readApiBaseUrl(raw: string | undefined): string {
-  const value = (raw ?? 'http://localhost:8000').trim();
+  const defaultValue = import.meta.env.PROD ? 'same-origin' : 'http://localhost:8000';
+  const value = (raw ?? defaultValue).trim();
   // The Vercel deployment hosts the FastAPI function and the static client
   // under one origin. Keep this opt-in so local development retains its
   // explicit localhost default and never silently calls a deployed API.

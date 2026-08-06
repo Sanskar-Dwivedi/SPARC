@@ -17,6 +17,21 @@ cd ../../orbital-website && npm run serve   # http://localhost:8123/
 `npm run dev` remains available for panel-only frontend development at
 `http://localhost:5173`, but it is not the user-facing SPARC entry.
 
+### Reporting package workflow
+
+The dashboard can open the report wizard offline, but creating the PDF/evidence
+package is a server operation. Run the local API in a second terminal from the
+repository root:
+
+```powershell
+$env:GEMINI_API_KEY="your-key-for-this-process"
+.\.venv\Scripts\python.exe -m uvicorn apps.api.app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Keep the key server-side; do not put it in a `VITE_*` variable or commit it.
+If Gemini drafting is not configured, the wizard will open but package creation
+will fail safely because the UI requires explicit Gemini consent for drafting.
+
 Port 5173 is not arbitrary — it is one of the API's default allowed origins
 (`apps/api/app/config.py`). Serving on another port needs `SPARC_ALLOWED_ORIGINS`
 updated on the API side.

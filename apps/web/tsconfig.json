@@ -22,6 +22,7 @@
       "@globe/*": ["../../orbital-website/*"],
       "@boundaries/*": ["../../data/metadata/boundaries/geoBoundaries-IND-ADM2-76128533/*"],
       "@validated/*": ["../../data/validated/boundaries/geoBoundaries-IND-ADM2-76128533/*"],
+      "@global-boundaries/*": ["../../data/validated/boundaries/global/*"],
       "@citycatalog/*": ["../../data/catalog/*"]
     }
   },
