@@ -10,6 +10,22 @@ from apps.api.app.forecast_repository import ForecastRepository
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SUPPORTED_FORECAST_REGION_IDS = (
+    "district:nagpur",
+    "district:bengaluru-urban",
+    "district:mumbai",
+    "district:delhi",
+    "district:chennai",
+    "district:bhopal",
+    "district:new-york",
+    "district:washington-dc",
+    "district:tokyo",
+    "district:london",
+    "district:cairo",
+    "district:sydney",
+    "district:rio-de-janeiro",
+    "district:reykjavik",
+)
 
 
 class ForecastContractTests(unittest.TestCase):
@@ -64,6 +80,26 @@ class ForecastContractTests(unittest.TestCase):
                 "links": {"self": "/api/v1/regions/district:nagpur/forecast-runs", "related": []},
             },
         )
+
+    def test_requested_city_forecast_runs_validate(self) -> None:
+        for region_id in SUPPORTED_FORECAST_REGION_IDS:
+            runs = self.repository.list_runs(region_id)
+            self.assertEqual(len(runs), 3, region_id)
+            for hazard in ("flood", "drought", "heat"):
+                data = self.repository.get_latest(region_id, hazard)
+                self.assertIsNotNone(data, f"{region_id}/{hazard}")
+                assert data is not None
+                self.validate(
+                    "ForecastRunResponse",
+                    {
+                        "data": data,
+                        "meta": self.repository.base_meta,
+                        "links": {
+                            "self": f"/api/v1/regions/{region_id}/forecasts/{hazard}/latest",
+                            "related": [],
+                        },
+                    },
+                )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,20 @@
 # Data discovery scripts
 
+## Synthetic forecast fixture coverage
+
+The read-only forecast API currently serves a checked-in synthetic pack while
+operational forecast ingestion is not available. To reproduce the city
+coverage used by the dashboard, run this from the repository root:
+
+```powershell
+python -m scripts.data.expand_forecast_fixture
+```
+
+This writes flood, drought, and heat integration fixtures for the 14 cities in
+`data/catalog/supported-cities.json`. The resulting pack is intentionally
+marked synthetic; it must not be used as a live warning or as evidence of
+city-specific model skill.
+
 Run metadata-only Sentinel-2 discovery through Earth Engine from the repository root:
 
 ```powershell

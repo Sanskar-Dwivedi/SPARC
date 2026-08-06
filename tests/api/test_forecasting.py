@@ -11,6 +11,22 @@ RUN_IDS = {
     "drought": "forecast-run:district-nagpur:2026-08-05t06-00-00z:drought",
     "heat": "forecast-run:district-nagpur:2026-08-05t06-00-00z:heat",
 }
+SUPPORTED_FORECAST_REGION_IDS = (
+    "district:nagpur",
+    "district:bengaluru-urban",
+    "district:mumbai",
+    "district:delhi",
+    "district:chennai",
+    "district:bhopal",
+    "district:new-york",
+    "district:washington-dc",
+    "district:tokyo",
+    "district:london",
+    "district:cairo",
+    "district:sydney",
+    "district:rio-de-janeiro",
+    "district:reykjavik",
+)
 
 
 class ForecastApiTests(unittest.IsolatedAsyncioTestCase):
@@ -59,6 +75,26 @@ class ForecastApiTests(unittest.IsolatedAsyncioTestCase):
         metric_ids = {metric["id"] for metric in heat["points"][0]["metrics"]}
         self.assertIn("air-temperature", metric_ids)
         self.assertIn("land-surface-temperature", metric_ids)
+
+    async def test_requested_city_fixture_coverage_exposes_all_hazards(self) -> None:
+        for region_id in SUPPORTED_FORECAST_REGION_IDS:
+            requested_region = f"mock:{region_id}"
+            response = await self.client.get(
+                f"/api/v1/regions/{requested_region}/forecast-runs"
+            )
+            self.assertEqual(response.status_code, 200, response.text)
+            body = response.json()
+            self.assertEqual(
+                {item["hazard"] for item in body["data"]},
+                {"flood", "drought", "heat"},
+                region_id,
+            )
+            for hazard in ("flood", "drought", "heat"):
+                response = await self.client.get(
+                    f"/api/v1/regions/{requested_region}/forecasts/{hazard}/latest"
+                )
+                self.assertEqual(response.status_code, 200, response.text)
+                self.assertEqual(response.json()["data"]["region"]["id"], requested_region)
 
     async def test_forecast_timeseries_is_immutable_and_etag_aware(self) -> None:
         path = (
