@@ -10,12 +10,11 @@ import { useId } from 'react';
 import { sdgLinksFor } from '../sdg';
 import type { DetailView as DetailVM } from '../viewmodel/mapper';
 import { Callout, StatusPill, Value } from './Primitives';
-import { QualityPanel, ProvenancePanel } from './Disclosure';
+import { QualityPanel } from './Disclosure';
 import { BoundaryProvenancePanel } from './BoundaryProvenance';
 import { LayerView } from './LayerView';
 import { EvidenceViz } from './EvidenceViz';
 import { Choropleth } from './Choropleth';
-import { styleFor } from '../indicators';
 
 /* Which SDG target this proxy speaks to — and, just as prominently, the official
    indicator it is not. Stating the relevance without stating the limit is how a
@@ -45,9 +44,11 @@ function SdgPanel({ indicatorId }: { indicatorId: string }) {
 export function DetailScreen({
   detail,
   onBack,
+  onOpenProvenance,
 }: {
   detail: DetailVM;
   onBack: () => void;
+  onOpenProvenance: () => void;
 }) {
   const headingId = useId();
   const interpId = useId();
@@ -61,6 +62,11 @@ export function DetailScreen({
           <span aria-hidden="true">←</span> Back to {detail.region.name.replace(/ — .*$/, '')}
         </button>
         <span className="crumb__here">{detail.indicatorName.replace(/ — .*$/, '')}</span>
+        {/* Provenance moved out of a panel at the bottom of a long page and
+            into a drawer that opens from wherever the reader is (§3.3). */}
+        <button type="button" className="btn" style={{ marginLeft: 'auto' }} onClick={onOpenProvenance}>
+          Provenance ↗
+        </button>
       </nav>
 
       <section className="panel" aria-labelledby={headingId}>
@@ -141,7 +147,6 @@ export function DetailScreen({
         layers={detail.layers}
         regionId={detail.region.id}
         syntheticLayers={detail.badge.grade === 'synthetic'}
-        accent={styleFor(detail.indicatorId).accent}
       />
       {detail.badge.grade === 'published' ? (
         <Choropleth
@@ -150,7 +155,6 @@ export function DetailScreen({
           regionName={detail.region.name.replace(/ — .*$/, '')}
         />
       ) : null}
-      <ProvenancePanel provenance={detail.provenance} />
       <BoundaryProvenancePanel />
     </>
   );

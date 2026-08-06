@@ -16,7 +16,10 @@ import type { ComparisonSelection, RegionRef } from './contract/types';
 import { DataError } from './data/errors';
 import { createTransport, Repository } from './data/repository';
 import { DetailScreen } from './features/DetailView';
-import { LimitationsPanel, ModeBanner } from './features/Disclosure';
+import { LimitationsPanel } from './features/Disclosure';
+import { JourneyRail, LedgerStrip, type JourneyStep } from './features/Ledger';
+import { ProvenanceDrawer } from './features/ProvenanceDrawer';
+import { Logo } from './features/Logo';
 import { ErrorView, LoadingView } from './features/StateViews';
 import { SummaryScreen } from './features/SummaryView';
 import { FallbackCityView } from './features/FallbackCityView';
@@ -86,6 +89,12 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
   // CODEX PROTOTYPE HANDOFF: Claude should replace this local shell with the
   // reviewed reporting transport once the browser contract is consumed.
   const [reportOpen, setReportOpen] = useState(false);
+  /* The provenance drawer is opened from an indicator row or from the detail
+     screen, so its subject is whichever comparison was last asked about — not
+     whichever route is active. Holding it here rather than in either screen is
+     what lets the drawer survive navigating between them. */
+  const [provSubject, setProvSubject] = useState<DetailVM | null>(null);
+  const [provOpen, setProvOpen] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
 
   const repository = useMemo(() => new Repository(createTransport(dataMode)), [dataMode]);
@@ -140,7 +149,12 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
     return () => ac.abort();
   }, [repository, selection, stage, route, reloadToken, catalogCity, cityHasValidatedPack]);
 
-  useEffect(() => { if (stage === 'dashboard') mainRef.current?.focus(); }, [stage, route.name]);
+  /* preventScroll: moving focus to <main> is for keyboard users, but the
+     browser's default "scroll it into view" also pushed the district heading up
+     under the sticky header block on every arrival. */
+  useEffect(() => {
+    if (stage === 'dashboard') mainRef.current?.focus({ preventScroll: true });
+  }, [stage, route.name]);
 
   /* The globe owns its own scene, so the panel does not reach into it — it
      announces which indicator is in focus and the globe recolours its marker
@@ -186,6 +200,21 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
       },
     }));
   }, [stage, regionId, route, summary]);
+
+  /* Indicator rows fetch their own evidence on first expand: the summary
+     payload has no sensitivity, scene count or coverage in it, and a row that
+     expanded into numbers the summary never carried would be inventing them. */
+  const loadEvidence = useCallback(
+    (indicatorId: string) => repository
+      .getIndicatorComparison(selection, indicatorId)
+      .then((r) => mapDetail(r, repository.label)),
+    [repository, selection],
+  );
+
+  const openProvenance = useCallback((subject: DetailVM) => {
+    setProvSubject(subject);
+    setProvOpen(true);
+  }, []);
 
   const go = useCallback((hash: string) => { location.hash = hash; }, []);
   const openIndicator = useCallback((id: string) => {
@@ -259,22 +288,50 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
   }
 
   /* ── dashboard ─────────────────────────────────────────────────────────── */
-  const badge = summary.status === 'ready' ? summary.value.badge
-    : detail.status === 'ready' ? detail.value.badge : null;
-  const warnings = summary.status === 'ready' ? summary.value.warnings : [];
   const fallbackCity = catalogCity && !cityHasValidatedPack ? catalogCity : null;
+
+  /* ── the ledger (§2.4) ───────────────────────────────────────────────────
+     Every field is a value that came off the wire or a state the app is
+     genuinely in. Nothing here is composed to fill the strip: quality reports
+     the weakest grade among the indicators on screen, because a strip that
+     showed the best one would be advertising rather than reporting. */
+  const ready = summary.status === 'ready' ? summary.value : null;
+  const shown = detail.status === 'ready' ? detail.value : null;
+  const grades = ready?.indicators.map((i) => i.qualityLevel) ?? [];
+  const worst = (['unknown', 'low', 'medium', 'high'] as const).find((g) => grades.includes(g)) ?? null;
+  const scenes = ready && ready.baseline.sceneCount !== null && ready.comparison.sceneCount !== null
+    ? ready.baseline.sceneCount + ready.comparison.sceneCount
+    : null;
+  const offline = dataMode === 'demo';
+  const ledger = {
+    region: fallbackCity ? regionName : ready?.regionName ?? regionName,
+    window: fallbackCity ? null : `${period.baselineStart}→${period.comparisonEnd}`,
+    mode: summary.status === 'loading' || summary.status === 'idle'
+      ? 'LOADING'
+      : `PRECOMPUTED${offline ? ' · OFFLINE' : ''}`,
+    modeCaution: offline || summary.status === 'error',
+    quality: (summary.status === 'loading' ? 'loading' as const : shown?.quality.level ?? worst),
+    scenes,
+  };
+
+  /* Which step of the real sequence (§4.1) the reader is on. Region and period
+     are behind them by the time the dashboard renders at all, so from here the
+     rail only distinguishes inspecting from reading provenance. */
+  const step: JourneyStep = provOpen ? 'provenance' : 'indicator';
 
   return (
     <div className="app">
       <a className="skip" href="#main">Skip to results</a>
 
+      {/* Header, ledger and rail stick as one block. Three sibling stickies all
+          anchored at top: 0 would simply overlap each other. */}
+      <div className="shellhead">
       <header className="topbar">
         <div className="brand">
-          <span className="brand__name">SPARC</span>
+          <Logo />
           <span className="brand__sub">{regionName} · {fallbackCity ? 'Report/export scope' : period.label}</span>
         </div>
         <div className="topbar__actions">
-          {badge ? <ModeBanner badge={badge} warnings={warnings} /> : null}
           <button
             type="button" className="btn"
             onClick={() => (panel
@@ -292,6 +349,11 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
         </div>
       </header>
 
+      {/* The two pieces of persistent chrome, and deliberately the only two. */}
+      <LedgerStrip facts={ledger} />
+      <JourneyRail current={step} />
+      </div>
+
       <main id="main" ref={mainRef} tabIndex={-1} className="main">
         {fallbackCity ? (
           <FallbackCityView city={fallbackCity} onReport={() => setReportOpen(true)} />
@@ -306,7 +368,13 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
               onUseOffline={() => setDataMode('demo')}
             />
           ) : (
-            <SummaryScreen summary={summary.value} onOpenIndicator={openIndicator} onReport={() => setReportOpen(true)} />
+            <SummaryScreen
+              summary={summary.value}
+              onOpenIndicator={openIndicator}
+              onOpenProvenance={openProvenance}
+              loadEvidence={loadEvidence}
+              onReport={() => setReportOpen(true)}
+            />
           )
         ) : detail.status === 'loading' || detail.status === 'idle' ? (
           <LoadingView what="the indicator result" />
@@ -325,7 +393,11 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
             />
           </>
         ) : (
-          <DetailScreen detail={detail.value} onBack={backToSummary} />
+          <DetailScreen
+            detail={detail.value}
+            onBack={backToSummary}
+            onOpenProvenance={() => openProvenance(detail.value)}
+          />
         )}
 
         <LimitationsPanel />
@@ -334,6 +406,12 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
       <footer className="foot">
         <p>Contract {config.contractVersion} · No official SDG claim, no causal claim.</p>
       </footer>
+
+      <ProvenanceDrawer
+        detail={provSubject ?? shown}
+        open={provOpen}
+        onClose={() => setProvOpen(false)}
+      />
 
       <ReportConcern
         open={reportOpen}

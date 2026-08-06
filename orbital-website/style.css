@@ -104,15 +104,19 @@ body.ready #hud-top, body.ready #hud-bottom { opacity: 1; }
 }
 #hud-bottom { bottom: 0; text-align: center; }
 
-.brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.brand-mark {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-  animation: pulse 2.6s ease-in-out infinite;
+.brand { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; }
+/* The mark carries the live-signal pulse the old standalone dot used to. One
+   element doing both keeps the header from collecting decorations. */
+.brand-logo {
+  width: 21px;
+  height: 21px;
+  flex: none;
+  fill: currentColor;
+  color: var(--ink);
+  filter: drop-shadow(0 0 10px rgba(90, 180, 240, 0.35));
+  animation: pulse 4.2s ease-in-out infinite;
 }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.62; } }
 .brand-name { font-size: 13px; letter-spacing: 0.34em; font-weight: 600; }
 .brand-sub {
   font-size: 9.5px;
@@ -183,7 +187,16 @@ body.ready #hud-top, body.ready #hud-bottom { opacity: 1; }
 }
 @keyframes tipin { from { opacity: 0; transform: translate(-50%, -20px); } }
 
-/* ── targeting console ──────────────────────────────────────────────────── */
+/* ── targeting console ──────────────────────────────────────────────────────
+   The first surface after the satellite is clicked, and therefore the first
+   thing that is no longer the globe. It hands over to the analytical drawer, so
+   it is drawn in the drawer's language rather than the planet's: IBM Plex Mono,
+   graphite, one vermillion accent, hairlines instead of fills.
+   That handover is the point. The blue HUD belongs to the instrument looking at
+   the Earth; everything from here on belongs to the analysis, and the change of
+   palette is how an operator knows which of the two they are reading.
+   Every token below is scoped to the console. Nothing here can reach the HUD,
+   the telemetry row or the globe — those keep --accent: #58b7ff untouched. */
 #console {
   position: fixed;
   inset: 0;
@@ -191,143 +204,242 @@ body.ready #hud-top, body.ready #hud-bottom { opacity: 1; }
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(3px);
+
+  --c-ink: #f4f5f7;
+  --c-dim: #949cab;
+  --c-faint: #676d7b;
+  --c-line: rgba(168, 174, 188, 0.24);
+  --c-line-soft: rgba(168, 174, 188, 0.11);
+  --c-accent: #e64749;
+  --c-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Loaded by the analytical bundle's stylesheet, which this page already
+     links. The fallback is the HUD's own stack, so a failed font never leaves
+     the console unstyled. */
+  --c-mono: "IBM Plex Mono", var(--mono);
+
+  background-image: radial-gradient(circle, rgba(168, 174, 188, 0.07) 1px, transparent 1px);
+  background-size: 26px 26px;
+  background-color: rgba(9, 10, 13, 0.84);
+  backdrop-filter: blur(8px);
   animation: fade 260ms ease;
 }
 @keyframes fade { from { opacity: 0; } }
 
 .console-panel {
+  --px: 50%;
+  --py: 50%;
+  --glow: 0;
   position: relative;
-  width: min(560px, 100%);
-  padding: clamp(24px, 4vw, 38px);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  animation: rise 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* Its own stacking context, so the glow can sit at z-index -1: above the
+     panel's background, below every child, and without having to position the
+     children — which would strip `position: absolute` off the close button. */
+  z-index: 0;
+  width: min(620px, 100%);
+  padding: clamp(28px, 5vw, 44px);
+  font-family: var(--c-mono);
+  color: var(--c-ink);
+  background:
+    radial-gradient(circle, rgba(168, 174, 188, 0.075) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(170deg, rgba(32, 36, 45, 0.94), rgba(13, 14, 17, 0.96));
+  border: 1px solid var(--c-line-soft);
+  box-shadow: 0 40px 110px rgba(0, 0, 0, 0.8);
+  animation: rise 380ms var(--c-ease);
 }
-@keyframes rise { from { opacity: 0; transform: translateY(16px) scale(0.98); } }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } }
 
+/* Accent tick at the head. */
 .console-panel::before {
   content: "";
   position: absolute;
   top: 0; left: 0;
-  width: 42px; height: 2px;
-  background: var(--accent);
+  width: 56px; height: 2px;
+  background: var(--c-accent);
+}
+
+/* Light that follows the pointer across the panel, written by interact.ts in
+   the analytical bundle. Without the script the panel is simply flat, which is
+   a complete design on its own. */
+.console-glow {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(32rem circle at var(--px) var(--py),
+    rgba(255, 255, 255, 0.07) 0%, rgba(230, 71, 73, 0.11) 26%, transparent 62%);
+  opacity: var(--glow);
+  transition: opacity 340ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .console-close {
   position: absolute;
-  top: 12px; right: 14px;
+  top: 14px; right: 14px;
   width: 30px; height: 30px;
   background: none;
-  border: 1px solid transparent;
-  color: var(--dim);
-  font-size: 19px;
+  border: 1px solid var(--c-line-soft);
+  color: var(--c-faint);
+  font-family: var(--c-mono);
+  font-size: 17px;
   line-height: 1;
   cursor: pointer;
-  transition: color 160ms, border-color 160ms;
+  transition: color 200ms, background 200ms, border-color 200ms, transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.console-close:hover { color: var(--ink); border-color: var(--line); }
+.console-close:hover {
+  color: #12100f;
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  transform: rotate(90deg);
+}
 
+/* Display type: extra-light tracked caps at size. The tight word-spacing is
+   what makes tracked monospace read as a title rather than as code. */
 #console-title {
-  margin: 0 0 8px;
-  font-size: 15px;
-  letter-spacing: 0.2em;
+  margin: 0 0 14px;
+  font-size: clamp(20px, 4.4vw, 34px);
+  font-weight: 200;
+  letter-spacing: 0.02em;
+  word-spacing: -0.24em;
+  line-height: 1.06;
   text-transform: uppercase;
-  font-weight: 600;
+  color: var(--c-ink);
 }
 .console-lede {
-  margin: 0 0 22px;
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--dim);
+  margin: 0 0 30px;
+  max-width: 54ch;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.9;
+  color: var(--c-dim);
 }
 
-.field { display: flex; gap: 8px; }
+/* The field and its control are one object, so they share an edge.
+   Scoped to #console on purpose: the analytical bundle's stylesheet is linked
+   by this page and also owns a `.field`, a column layout for the dashboard's
+   select controls. Loading later, it was winning — which is why the input and
+   TARGET button were stacked instead of joined. An id beats it for good. */
+#console .field { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 0; min-width: 0; }
 #query {
   flex: 1;
   min-width: 0;
-  padding: 13px 14px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--line);
-  color: var(--ink);
-  font-family: var(--mono);
-  font-size: 12.5px;
-  letter-spacing: 0.04em;
+  padding: 15px 16px;
+  background: rgba(9, 10, 13, 0.6);
+  border: 1px solid var(--c-line-soft);
+  border-right: 0;
+  color: var(--c-ink);
+  font-family: var(--c-mono);
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.05em;
   outline: none;
-  transition: border-color 160ms, box-shadow 160ms;
+  transition: border-color 240ms, background 240ms;
 }
-#query::placeholder { color: #4a5768; }
+#query::placeholder { color: var(--c-faint); }
 #query:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(88, 183, 255, 0.12);
+  border-color: var(--c-accent);
+  background: rgba(230, 71, 73, 0.05);
+  box-shadow: none;
 }
+/* The reference's signature control: a disc of the accent grows from the point
+   the pointer is actually at until it has swallowed the button, and the label
+   inverts. `--px`/`--py` come from interact.ts; with no script it is a plain
+   accent-bordered button that fills from its centre on hover. */
 #go {
-  padding: 0 20px;
-  background: var(--accent);
-  border: none;
-  color: #02121f;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  --px: 50%;
+  --py: 50%;
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  padding: 0 26px;
+  background: transparent;
+  border: 1px solid var(--c-line-soft);
+  color: var(--c-ink);
+  font-family: var(--c-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
   cursor: pointer;
-  transition: filter 160ms;
+  transition: color 260ms cubic-bezier(0.22, 1, 0.36, 1), border-color 260ms;
 }
-#go:hover { filter: brightness(1.14); }
-#go:active { filter: brightness(0.92); }
+#go::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: var(--px);
+  top: var(--py);
+  width: var(--fill, 0px);
+  height: var(--fill, 0px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--c-accent);
+  transition: width 520ms var(--c-ease), height 520ms var(--c-ease);
+}
+#go:hover, #go:focus-visible { --fill: 46rem; color: #12100f; border-color: var(--c-accent); }
+#go:active { --fill: 40rem; }
 
 .console-error {
-  margin: 12px 0 0;
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  color: #ff7a7a;
+  margin: 14px 0 0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--c-accent);
 }
 
-.suggestions { list-style: none; margin: 10px 0 0; padding: 0; max-height: 168px; overflow-y: auto; }
+.suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 190px;
+  overflow-y: auto;
+  border-top: 1px solid var(--c-line-soft);
+}
 .suggestions li {
-  padding: 9px 12px;
-  font-size: 11.5px;
-  color: var(--dim);
+  padding: 11px 14px;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--c-dim);
   cursor: pointer;
-  border-left: 2px solid transparent;
-  transition: background 140ms, color 140ms, border-color 140ms;
+  border-left: 1px solid transparent;
+  border-bottom: 1px solid var(--c-line-soft);
+  transition: background 240ms, color 240ms, border-color 240ms, padding-left 480ms var(--c-ease);
 }
 .suggestions li:hover, .suggestions li[aria-selected="true"] {
-  background: rgba(88, 183, 255, 0.08);
-  border-left-color: var(--accent);
-  color: var(--ink);
+  background: rgba(230, 71, 73, 0.07);
+  border-left-color: var(--c-accent);
+  color: var(--c-ink);
+  padding-left: 22px;
 }
-.suggestions li em { font-style: normal; color: var(--accent); }
-.suggestions li span { float: right; font-size: 10px; opacity: 0.6; }
+.suggestions li em { font-style: normal; color: var(--c-accent); }
+.suggestions li span { float: right; font-size: 10.5px; color: var(--c-faint); }
 
-.console-foot { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+.console-foot { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--c-line-soft); }
 .console-foot-label {
   display: block;
-  font-size: 8.5px;
-  letter-spacing: 0.24em;
-  color: var(--dim);
-  margin-bottom: 11px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  color: var(--c-faint);
+  margin-bottom: 14px;
 }
-.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips button {
-  padding: 7px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--line);
-  color: var(--dim);
-  font-family: var(--mono);
+  padding: 9px 14px;
+  background: transparent;
+  border: 1px solid var(--c-line-soft);
+  color: var(--c-dim);
+  font-family: var(--c-mono);
   font-size: 10px;
-  letter-spacing: 0.1em;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: color 150ms, border-color 150ms, background 150ms;
+  transition: color 220ms, border-color 220ms, background 220ms;
 }
 .chips button:hover {
-  color: var(--ink);
-  border-color: var(--accent);
-  background: rgba(88, 183, 255, 0.08);
+  color: #12100f;
+  border-color: var(--c-accent);
+  background: var(--c-accent);
 }
-.chips button small { margin-left: 0.45rem; color: var(--accent); font-size: 0.85em; letter-spacing: 0.06em; }
+.chips button small { margin-left: 0.5rem; color: var(--c-accent); font-size: 0.85em; letter-spacing: 0.1em; }
+.chips button:hover small { color: #12100f; }
 
 /* ── target label pinned to the globe ─────────────────────────────────────
    The element is positioned on the tip of the 3D mast, so the panel sits
@@ -396,6 +508,73 @@ body.ready #hud-top, body.ready #hud-bottom { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loader-ring, .brand-mark { animation: none; }
+  .loader-ring, .brand-mark, .brand-logo { animation: none; }
   .console-panel, #console, #sat-tip { animation: none; }
 }
+
+
+/* ══ TERMINAL TYPOGRAPHIC SYSTEM ═══════════════════════════════════════════
+   Adapted from the daoism.systems visual language, inverted for orbit.
+   Its signature is structural rather than decorative: bracketed uppercase
+   labels, hairline rules, plus-marks at the corners of a block, and a great
+   deal of negative space.
+   That last part is why it suits this page specifically. A dense UI fights a
+   planet for attention; an interface built mostly from thin rules and empty
+   space lets the globe read as the subject and the chrome as instrumentation
+   around it. The palette stays near-monochrome with a single cyan accent for
+   the same reason — the Earth supplies all the colour this page needs. */
+
+/* Bracketed labels. [ LIKE THIS ] — the brackets are generated, so the text
+   node stays clean for screen readers and for anything that copies it. */
+.tel label::before,
+.console-foot-label::before { content: "[ "; opacity: 0.45; }
+.tel label::after,
+.console-foot-label::after { content: " ]"; opacity: 0.45; }
+
+.tel label,
+.console-foot-label {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.24em;
+}
+
+/* Plus-marks at the console's corners. Two hairlines crossing, drawn with
+   gradients so there is no extra markup and nothing to announce. They sit over
+   the content, which is why the pointer glow needed an element of its own. */
+.console-panel::after {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  pointer-events: none;
+  z-index: 2;
+  --cpl: linear-gradient(var(--c-accent), var(--c-accent));
+  background:
+    var(--cpl) 0 0 / 1px 10px no-repeat, var(--cpl) 0 0 / 10px 1px no-repeat,
+    var(--cpl) 100% 0 / 1px 10px no-repeat, var(--cpl) 100% 0 / 10px 1px no-repeat,
+    var(--cpl) 0 100% / 1px 10px no-repeat, var(--cpl) 0 100% / 10px 1px no-repeat,
+    var(--cpl) 100% 100% / 1px 10px no-repeat, var(--cpl) 100% 100% / 10px 1px no-repeat;
+  opacity: 0.45;
+}
+
+/* Sharper, flatter chrome: the reference language has no soft corners. */
+.console-panel, .console-close { border-radius: 0; }
+#query, #go, .chips button, .suggestions li { border-radius: 0; }
+
+/* The console owns the focus ring inside itself. The HUD's cyan would be the
+   one blue left in an otherwise handed-over screen. */
+#console :focus-visible {
+  outline: 1px solid var(--c-accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .console-panel { padding: 26px 20px 24px; }
+  #console-title { font-size: 22px; }
+}
+
+/* Telemetry reads as a measured row rather than four floating numbers. */
+.telemetry {
+  padding-left: clamp(12px, 2vw, 22px);
+  border-left: 1px solid var(--line);
+}
+
+.hint { letter-spacing: 0.2em; }

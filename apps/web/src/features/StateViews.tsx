@@ -9,13 +9,25 @@
 import type { DataError, DataErrorKind } from '../data/errors';
 import { Callout } from './Primitives';
 
+/* Loading (§5): hairline-outlined placeholders in the shape of the rows that
+ * are coming, with one slow opacity pulse. Not a skeleton shimmer gradient, and
+ * not a spinner — the layout of the answer is already known, so showing it
+ * stops the page reflowing under the reader when the data lands. */
 export function LoadingView({ what }: { what: string }) {
   return (
     // aria-busy + a polite live region: a screen reader user gets told the
-    // fetch started without the announcement stealing focus.
-    <div className="state state--loading" aria-busy="true" aria-live="polite">
-      <span className="spinner" aria-hidden="true" />
-      <p>Loading {what}…</p>
+    // fetch started without the announcement stealing focus. The placeholders
+    // themselves are hidden from it — three pulsing bars are noise, not news.
+    <div aria-busy="true" aria-live="polite">
+      <p className="state state--loading">Loading {what}…</p>
+      <ul className="ghost" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <li className="ghost__row" key={i} style={{ animationDelay: `${i * 120}ms` }}>
+            <span className="ghost__bar ghost__bar--short" />
+            <span className="ghost__bar ghost__bar--num" />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

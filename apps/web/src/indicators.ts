@@ -10,20 +10,27 @@
  * indicator name and the change in words. */
 
 export interface IndicatorStyle {
+  /** Marker colour on the globe. Owned by the scene, not by the interface —
+   *  the UI design doc puts the globe viewport out of its scope, so this value
+   *  stays in step with orbital-website/main.js and nothing else. */
   accent: string;
+  /** Interface signal colour (UI design doc §2.1). Muted, one per indicator,
+   *  and only ever painted next to that indicator's own data — never as page
+   *  branding, which is what keeps colour carrying information. */
+  signal: string;
   /** Text glyph, so the family reads without colour. */
   glyph: string;
   short: string;
 }
 
 const STYLES: Record<string, IndicatorStyle> = {
-  'surface-water': { accent: '#4da3ff', glyph: '≈', short: 'Water' },
-  vegetation: { accent: '#63d68a', glyph: '❧', short: 'Vegetation' },
-  'built-up': { accent: '#ffb454', glyph: '▦', short: 'Built-up' },
-  lst: { accent: '#ff7a5c', glyph: '▲', short: 'Heat' },
+  'surface-water': { accent: '#4da3ff', signal: '#4fb6c9', glyph: '≈', short: 'Water' },
+  vegetation: { accent: '#63d68a', signal: '#7fa65a', glyph: '❧', short: 'Vegetation' },
+  'built-up': { accent: '#ffb454', signal: '#c99a5b', glyph: '▦', short: 'Built-up' },
+  lst: { accent: '#ff7a5c', signal: '#c97155', glyph: '▲', short: 'Heat' },
 };
 
-const FALLBACK: IndicatorStyle = { accent: '#93a4b8', glyph: '•', short: 'Indicator' };
+const FALLBACK: IndicatorStyle = { accent: '#93a4b8', signal: '#5c685f', glyph: '•', short: 'Indicator' };
 
 export function styleFor(indicatorId: string): IndicatorStyle {
   return STYLES[indicatorId] ?? FALLBACK;

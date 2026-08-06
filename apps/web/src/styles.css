@@ -541,3 +541,107 @@ body {
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
+
+
+/* ══ BRAND ═════════════════════════════════════════════════════════════════ */
+.logo { display: inline-flex; align-items: center; gap: 0.55rem; }
+.logo__mark {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex: none;
+  fill: currentColor;
+}
+/* The wordmark approximates the geometric face of the supplied logo with open
+   tracking rather than by outlining it, so the name stays selectable and
+   readable. It is the accessible name when present — see Logo.tsx. */
+.logo__word {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  /* Trailing tracking would otherwise push the optical centre left. */
+  margin-right: -0.3em;
+}
+
+/* ══ TERMINAL TYPOGRAPHIC SYSTEM ═══════════════════════════════════════════
+   The same language as the globe HUD (orbital-website/style.css), so the
+   drawer reads as instrumentation belonging to the planet behind it rather
+   than a separate web page floating over it: bracketed uppercase labels,
+   hairline rules, plus-marks at block corners, and generous negative space.
+
+   The panel is translucent, so this matters more than style — structure drawn
+   with rules instead of fills lets the globe stay visible through the drawer,
+   which is the entire reason the drawer is translucent in the first place. */
+
+.sparc-panel .panel {
+  position: relative;
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012));
+}
+/* Plus-marks at the corners: two crossing hairlines per corner, drawn with
+   gradients so there is no extra markup and nothing for a screen reader to
+   trip over. Decorative only — never the sole carrier of meaning. */
+.sparc-panel .panel::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--accent), var(--accent)) 0 0 / 1px 8px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 0 0 / 8px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 100% 0 / 1px 8px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 100% 0 / 8px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 0 100% / 1px 8px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 0 100% / 8px 1px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 100% 100% / 1px 8px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 100% 100% / 8px 1px no-repeat;
+  opacity: 0.32;
+}
+/* The limitations block keeps its warning colour through the corner marks too,
+   so the one panel that must not be skimmed still reads differently. */
+.sparc-panel .panel--limits::after {
+  background-image:
+    linear-gradient(var(--warn), var(--warn)), linear-gradient(var(--warn), var(--warn)),
+    linear-gradient(var(--warn), var(--warn)), linear-gradient(var(--warn), var(--warn)),
+    linear-gradient(var(--warn), var(--warn)), linear-gradient(var(--warn), var(--warn)),
+    linear-gradient(var(--warn), var(--warn)), linear-gradient(var(--warn), var(--warn));
+  opacity: 0.5;
+}
+
+/* Bracketed micro-labels, matching the globe's telemetry row. Generated, so
+   the underlying text stays clean when copied or read aloud. */
+.sparc-panel .row__label::before,
+.sparc-panel .card2__figures dt::before { content: "[ "; opacity: 0.4; }
+.sparc-panel .row__label::after,
+.sparc-panel .card2__figures dt::after { content: " ]"; opacity: 0.4; }
+
+.sparc-panel .row__label,
+.sparc-panel .card2__figures dt {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.63rem;
+}
+
+/* Flatten the remaining soft corners — the reference language has none. */
+.sparc-panel .card2,
+.sparc-panel .console,
+.sparc-panel .citycard,
+.sparc-panel .period-card,
+.sparc-panel .btn,
+.sparc-panel .cta,
+.sparc-panel .pill,
+.sparc-panel .chip { border-radius: 0; }
+
+.sparc-panel .panel h2,
+.sparc-panel .panel h3 {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (prefers-contrast: more) {
+  /* Hairline corner marks disappear at high contrast; the panel border is
+     already doing the work, so drop them rather than leave faint specks. */
+  .sparc-panel .panel::after { display: none; }
+}

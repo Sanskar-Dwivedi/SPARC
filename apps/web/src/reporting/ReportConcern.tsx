@@ -3,6 +3,7 @@
  * lifecycle are frozen by the API contract. */
 
 import { useEffect, useId, useState } from 'react';
+import { createPortal } from 'react-dom';
 import release from '@boundaries/release-metadata.json';
 import nagpurProvenance from '@boundaries/nagpur.provenance.json';
 import bengaluruProvenance from '@boundaries/bengaluru-urban.provenance.json';
@@ -250,7 +251,19 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
   const next = () => { if (step === 'concern') setStep('evidence'); else if (step === 'evidence') setStep('review'); else if (step === 'review' && canContinueFromReview) void createReport(); };
   const back = () => { const previous = STEPS[stepIndex - 1]; if (previous) setStep(previous.id); };
 
-  return (
+  /* Portalled to <body>, not rendered in place.
+     The drawer this dialog is launched from is both `transform`ed (it slides in)
+     and `overflow-y: auto`. A transform makes an element the containing block
+     for `position: fixed` descendants, so a fixed overlay inside it is measured
+     against the drawer's *scrollable* box — the full height of the dashboard,
+     not the visible window — and then scrolls away with the content. In
+     practice the dialog opened somewhere above the fold and only its last
+     button was reachable. A portal takes it out of that ancestor entirely, so
+     `position: fixed; inset: 0` means the viewport again.
+     Portalling also makes the overlay a styling scope root rather than a
+     descendant of the drawer; daoism.css names `.report-overlay` alongside
+     `.sparc-panel` in its token selector for exactly that reason. */
+  return createPortal(
     <div className="report-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="report-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className="report-dialog__topline"><p className="report-dialog__eyebrow">REPORT WORKFLOW · CODEX CONTRACT</p><button type="button" className="console__close" onClick={onClose} aria-label="Close report workflow">×</button></div>
@@ -283,6 +296,7 @@ export function ReportConcern({ open, onClose, regionName, regionId, analysisSna
         {statusNotice && step !== 'handoff' ? <p className="report-status-notice" role="status">{statusNotice}</p> : null}
         <div className="report-actions">{stepIndex > 0 && step !== 'handoff' ? <button type="button" className="btn btn--ghost" onClick={back}>Back</button> : null}{step !== 'handoff' ? <button type="button" className="btn btn--primary" onClick={next} disabled={(step === 'concern' && concerns.length === 0) || (step === 'review' && (!canContinueFromReview || creating))}>{creating ? 'Creating package…' : step === 'review' ? 'Create report package' : 'Continue'}</button> : <button type="button" className="btn btn--ghost" onClick={onClose}>Return to dashboard</button>}</div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

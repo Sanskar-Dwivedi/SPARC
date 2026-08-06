@@ -8,6 +8,15 @@ import './cards.css';
 import './picker.css';
 import './viz.css';
 import './reporting/reporting.css';
+/* Last, so the interface system layers over the base dashboard styles on
+   source order rather than by escalating selector weight. */
+import './system.css';
+import { installInteractions } from './interact';
+
+/* The one scripted piece of the motion budget (§4.3). Installed at module
+   scope, delegated and idempotent, so it costs a single observer whether or not
+   the panel is ever opened. */
+installInteractions();
 
 /* Top-level boundary. A render crash must not leave a blank page: the whole
    point of the offline demo is that it degrades to something a presenter can

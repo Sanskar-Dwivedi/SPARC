@@ -104,8 +104,31 @@ function syntheticBoundaryLayer(regionId: string, rings: [number, number][][]): 
   };
 }
 
-function MapCanvas({ layer, regionId, syntheticLayers, accent }: {
-  layer: LayerDescriptor; regionId: string; syntheticLayers: boolean; accent?: string;
+/* Map palette.
+ *
+ * Kept here as named constants rather than inline hex because MapLibre paints
+ * on a canvas and cannot read the stylesheet's custom properties — so these are
+ * the one place in the app where the theme has to be restated, and restating it
+ * in one block is the only way it stays in step with daoism.css. */
+const MAP = {
+  water: '#0d0f11',
+  land: '#141719',
+  landEdge: '#1e2225',
+  coast: 'rgba(154, 167, 158, 0.38)',
+  graticule: 'rgba(154, 167, 158, 0.12)',
+  /* Neutral, not a signal colour. §2.1 reserves the indicator accents for that
+     indicator's own data, and a district extent is not a measurement — painting
+     it in the water accent would imply it was one. */
+  district: '#edefea',
+} as const;
+
+const FIT_PADDING = 34;
+
+function MapCanvas({ layer, regionId, syntheticLayers, quiet = false }: {
+  layer: LayerDescriptor; regionId: string; syntheticLayers: boolean;
+  /** Suppress the raster-absence callout when the caller already states it —
+   *  two consecutive notices saying the same thing read as a fault. */
+  quiet?: boolean;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -114,6 +137,7 @@ function MapCanvas({ layer, regionId, syntheticLayers, accent }: {
   useEffect(() => {
     let disposed = false;
     let map: { remove: () => void } | null = null;
+    let observer: ResizeObserver | null = null;
 
     (async () => {
       try {
@@ -126,10 +150,10 @@ function MapCanvas({ layer, regionId, syntheticLayers, accent }: {
         const instance = new maplibre.Map({
           container: ref.current,
           style: { version: 8, sources: {}, layers: [
-            { id: 'bg', type: 'background', paint: { 'background-color': '#0a1420' } },
+            { id: 'bg', type: 'background', paint: { 'background-color': MAP.water } },
           ] },
           bounds: layer.bounds,
-          fitBoundsOptions: { padding: 26 },
+          fitBoundsOptions: { padding: FIT_PADDING },
           attributionControl: false,
           // The accessible table below is the keyboard path; leaving the canvas
           // in the tab order would trap users in a control with no equivalent.
@@ -137,8 +161,30 @@ function MapCanvas({ layer, regionId, syntheticLayers, accent }: {
         });
         map = instance;
 
+        /* Re-fit whenever the container changes size.
+         *
+         * `bounds` at construction is a one-shot: MapLibre turns it into a
+         * centre and a zoom against whatever the container measured at that
+         * instant, and keeps them forever after. The drawer this map lives in
+         * is user-resizable, so dragging it wider left the zoom untouched and
+         * simply revealed more empty sea — the district stayed the same forty
+         * pixels it had been in a half-width panel, which is what made this
+         * read as "no feature, nothing".
+         *
+         * Re-fitting on resize also covers the case where the container has not
+         * been laid out yet at construction, which produces the same symptom
+         * from a different cause. */
+        observer = new ResizeObserver(() => {
+          if (disposed) return;
+          instance.resize();
+          instance.fitBounds(layer.bounds, { padding: FIT_PADDING, animate: false });
+        });
+        observer.observe(ref.current);
+
         instance.on('load', () => {
           if (disposed) return;
+          instance.resize();
+          instance.fitBounds(layer.bounds, { padding: FIT_PADDING, animate: false });
 
           /* Land and coastline context. Without it the district floats on a flat
              background and reads as a broken map rather than a located one.
@@ -148,37 +194,46 @@ function MapCanvas({ layer, regionId, syntheticLayers, accent }: {
           instance.addSource('ne-land', { type: 'geojson', data: `${import.meta.env.BASE_URL}basemap/ne_110m_land.geojson` });
           instance.addLayer({
             id: 'ne-land-fill', type: 'fill', source: 'ne-land',
-            paint: { 'fill-color': '#16202c', 'fill-outline-color': '#243244' },
+            paint: { 'fill-color': MAP.land, 'fill-outline-color': MAP.landEdge },
           });
           instance.addSource('ne-coast', { type: 'geojson', data: `${import.meta.env.BASE_URL}basemap/ne_50m_coastline.geojson` });
           instance.addLayer({
             id: 'ne-coast-line', type: 'line', source: 'ne-coast',
-            paint: { 'line-color': '#3d5a7a', 'line-width': 0.9 },
+            paint: { 'line-color': MAP.coast, 'line-width': 1 },
           });
 
           /* The district boundary, drawn from the validated geometry we already
              hold. This is the part that is always real — the raster below is a
              demo asset that may not be packaged, and a map showing nothing at
              all because one image 404'd was worse than useless. */
-          // A one-degree graticule: at district scale the coastline may be off
-          // screen entirely, and a grid gives the extent a sense of size.
+          /* Graticule, stepped to the extent rather than fixed at one degree.
+             A district is roughly a third of a degree across, so a 1° grid put
+             at most one line on screen — or none — and gave the frame no sense
+             of scale at all. This picks the largest 1-2-5 step that still draws
+             a handful of lines across whatever is being shown, which is what
+             makes the grid read as a measure instead of decoration. */
           const [gw, gs, ge, gn] = layer.bounds;
+          const span = Math.max(ge - gw, gn - gs) || 1;
+          const raw = span / 4;
+          const magnitude = 10 ** Math.floor(Math.log10(raw));
+          const step = [1, 2, 5, 10].map((m) => m * magnitude).find((s) => s >= raw) ?? magnitude * 10;
+          const pad = span;
           const lines: { type: 'Feature'; properties: Record<string, never>;
             geometry: { type: 'LineString'; coordinates: number[][] } }[] = [];
-          for (let lon = Math.floor(gw) - 1; lon <= Math.ceil(ge) + 1; lon += 1) {
+          for (let lon = Math.ceil((gw - pad) / step) * step; lon <= ge + pad; lon += step) {
             lines.push({ type: 'Feature', properties: {}, geometry: {
-              type: 'LineString', coordinates: [[lon, gs - 2], [lon, gn + 2]] } } as never);
+              type: 'LineString', coordinates: [[lon, gs - pad], [lon, gn + pad]] } } as never);
           }
-          for (let lat = Math.floor(gs) - 1; lat <= Math.ceil(gn) + 1; lat += 1) {
+          for (let lat = Math.ceil((gs - pad) / step) * step; lat <= gn + pad; lat += step) {
             lines.push({ type: 'Feature', properties: {}, geometry: {
-              type: 'LineString', coordinates: [[gw - 2, lat], [ge + 2, lat]] } } as never);
+              type: 'LineString', coordinates: [[gw - pad, lat], [ge + pad, lat]] } } as never);
           }
           instance.addSource('graticule', {
             type: 'geojson', data: { type: 'FeatureCollection', features: lines },
           });
           instance.addLayer({
             id: 'graticule-line', type: 'line', source: 'graticule',
-            paint: { 'line-color': '#2b3a4d', 'line-width': 0.6 },
+            paint: { 'line-color': MAP.graticule, 'line-width': 1 },
           });
 
           const shape = shapeForRegion(regionId, layer.bounds);
@@ -191,22 +246,32 @@ function MapCanvas({ layer, regionId, syntheticLayers, accent }: {
                 geometry: { type: 'Polygon', coordinates: shape.rings },
               },
             });
+            /* The district is the subject of the frame, so it is the one thing
+               drawn in the house accent — everything else on this map is
+               context and stays grey. Three passes: a soft halo so the shape
+               separates from the land under it, a fill, then a crisp edge. */
+            instance.addLayer({
+              id: 'sparc-district-halo',
+              type: 'line',
+              source: 'sparc-district',
+              paint: { 'line-color': MAP.district, 'line-width': 8, 'line-opacity': 0.12, 'line-blur': 5 },
+            });
             instance.addLayer({
               id: 'sparc-district-fill',
               type: 'fill',
               source: 'sparc-district',
-              paint: { 'fill-color': accent ?? '#58b7ff', 'fill-opacity': 0.22 },
+              paint: { 'fill-color': MAP.district, 'fill-opacity': 0.09 },
             });
             instance.addLayer({
               id: 'sparc-district-line',
               type: 'line',
               source: 'sparc-district',
               paint: {
-                'line-color': accent ?? '#7fd0ff',
-                'line-width': 1.6,
+                'line-color': MAP.district,
+                'line-width': 1.4,
                 // Dashed when the outline is a bounding box rather than a
                 // surveyed boundary, so the two never look alike.
-                ...(shape.approximate ? { 'line-dasharray': [2, 2] } : {}),
+                ...(shape.approximate ? { 'line-dasharray': [3, 2] } : {}),
               },
             });
           }
@@ -259,14 +324,15 @@ function MapCanvas({ layer, regionId, syntheticLayers, accent }: {
 
     return () => {
       disposed = true;
+      observer?.disconnect();
       map?.remove();
     };
-  }, [layer, regionId, syntheticLayers, accent]);
+  }, [layer, regionId, syntheticLayers]);
 
   return (
     <>
       <div ref={ref} className="map" role="img" aria-label={`Map preview of ${layer.id}. The table below carries the same information.`} />
-      {rasterMissing ? (
+      {rasterMissing && !quiet ? (
         <Callout tone="info" title="Analytical raster not packaged in this build">
           <p>
             The district boundary above is the validated geometry. The
@@ -286,8 +352,8 @@ function MapCanvas({ layer, regionId, syntheticLayers, accent }: {
   );
 }
 
-export function LayerView({ layers, regionId, syntheticLayers = false, accent }: {
-  layers: LayerDescriptor[]; regionId: string; syntheticLayers?: boolean; accent?: string;
+export function LayerView({ layers, regionId, syntheticLayers = false }: {
+  layers: LayerDescriptor[]; regionId: string; syntheticLayers?: boolean;
 }) {
   const headingId = useId();
   const [webgl] = useState(webglAvailable);
@@ -307,7 +373,7 @@ export function LayerView({ layers, regionId, syntheticLayers = false, accent }:
               layer={syntheticBoundaryLayer(regionId, shape.rings)}
               regionId={regionId}
               syntheticLayers
-              accent={accent}
+              quiet
             />
           </div>
         ) : null}
@@ -342,7 +408,6 @@ export function LayerView({ layers, regionId, syntheticLayers = false, accent }:
                 layer={layer}
                 regionId={regionId}
                 syntheticLayers={syntheticLayers}
-                accent={accent}
               />
               <p className="hint">
                 The map is an optional preview. Everything it shows is also in the

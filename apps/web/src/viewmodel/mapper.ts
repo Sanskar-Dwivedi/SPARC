@@ -93,6 +93,11 @@ export interface QualityView {
   warnings: string[];
   rows: { label: string; value: Formatted; note?: string }[];
   independentValidationComplete: boolean;
+  /* Raw magnitude alongside the formatted string, for the same reason
+     MetricView carries raw numbers: the sensitivity bar needs a magnitude, and
+     parsing one back out of a localised percentage would be both fragile and a
+     second place for the null handling to go wrong. */
+  thresholdSensitivityRaw: number | null;
 }
 
 export interface DetailView {
@@ -275,6 +280,7 @@ function mapQuality(comparison: IndicatorComparison): QualityView {
     reasons: comparison.quality.reasons,
     warnings: comparison.quality.warnings,
     independentValidationComplete: e.independentValidationComplete,
+    thresholdSensitivityRaw: e.thresholdSensitivityPercent,
     rows: [
       {
         label: 'Common-valid coverage',
