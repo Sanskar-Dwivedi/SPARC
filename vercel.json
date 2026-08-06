@@ -5,7 +5,7 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 30,
-      "includeFiles": ["apps/api/reporting/assets/sparc-logo.webp"]
+      "includeFiles": "apps/api/reporting/assets/sparc-logo.webp"
     }
   },
   "routes": [
