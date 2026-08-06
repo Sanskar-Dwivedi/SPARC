@@ -244,6 +244,17 @@
 .time__tick { position: absolute; top: -13px; width: 1px; height: 9px; background: var(--ink-3); }
 .time__hint { margin: 0.6rem 0 0; font-family: var(--data); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
 
+/* Tile credit. Required by OSM (ODbL) and by CARTO's basemap terms, so it is
+   part of the map rather than something a screen can choose to include. */
+.atlas__attrib {
+  position: absolute; right: clamp(1rem, 3vw, 2.6rem); bottom: 0.4rem; margin: 0;
+  z-index: 3; pointer-events: none;
+  font-family: var(--data); font-size: 0.58rem; letter-spacing: 0.04em; color: var(--ink-3);
+}
+.map__attrib {
+  margin: 0.4rem 0 0;
+  font-family: var(--data); font-size: 0.6rem; letter-spacing: 0.04em; color: var(--ink-3);
+}
 .atlas__cursor {
   top: clamp(1rem, 3vh, 2.2rem); right: clamp(1rem, 3vw, 2.6rem);
   margin: 0; font-family: var(--data); font-size: 0.66rem; letter-spacing: 0.1em;
@@ -481,7 +492,15 @@
 :is(.sheet, .sparc-panel, #root) .metrics dt { font-family: var(--data); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
 :is(.sheet, .sparc-panel, #root) .metrics dd { margin: 0.45rem 0 0; font-family: var(--data); font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 500; letter-spacing: -0.02em; }
 :is(.sheet, .sparc-panel, #root) .value--unavailable { color: var(--caution); font-style: normal; }
-:is(.sheet, .sparc-panel, #root) :is(.map, .choro__map) { border: 1px solid var(--hair); border-radius: 3px; background: #04070d; height: clamp(14rem, 30vh, 22rem); }
+/* A map is a figure, so it gets a figure's proportions. Full-bleed in a wide
+   sheet it was about 6:1, and MapLibre fits bounds by the constraining axis —
+   so a square district in a letterbox frame zoomed out until it was a speck
+   with two thirds of the state either side of it. */
+:is(.sheet, .sparc-panel, #root) :is(.map, .choro__map) {
+  width: 100%; max-width: 60rem;
+  height: clamp(18rem, 42vh, 30rem);
+  border: 1px solid var(--hair); border-radius: 3px; background: #04070d;
+}
 :is(.sheet, .sparc-panel, #root) :is(.hint, .note, .rule) { font-size: 0.8rem; color: var(--ink-3); }
 :is(.sheet, .sparc-panel, #root) .interp { font-size: 1rem; line-height: 1.6; color: var(--ink); }
 :is(.sheet, .sparc-panel, #root) a { color: var(--sig-water); text-underline-offset: 3px; }

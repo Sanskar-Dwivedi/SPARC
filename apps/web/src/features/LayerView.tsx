@@ -16,6 +16,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { LayerDescriptor } from '../contract/types';
 import { shapeForRegion } from '../globe/overlay';
 import { Callout } from './Primitives';
+import { ATTRIBUTION, rasterBasemap, tilesAvailable } from './tiles';
 
 function webglAvailable(): boolean {
   try {
@@ -120,6 +121,11 @@ const MAP = {
      indicator's own data, and a district extent is not a measurement — painting
      it in the water accent would imply it was one. */
   district: '#edefea',
+  /* On the light OSM basemap a near-white outline disappears entirely. This
+     teal reads against roads, parks and water alike, and is deliberately not
+     one of the indicator signal colours — a district extent is not a
+     measurement, and colouring it like one would imply it was. */
+  districtOnLight: '#0f6d78',
 } as const;
 
 const FIT_PADDING = 34;
@@ -141,16 +147,17 @@ function MapCanvas({ layer, regionId, syntheticLayers, quiet = false }: {
 
     (async () => {
       try {
-        const maplibre = await import('maplibre-gl');
+        const [maplibre, online] = await Promise.all([import('maplibre-gl'), tilesAvailable()]);
         if (disposed || !ref.current) return;
 
-        // No remote basemap by design: the offline gate forbids one, and a
-        // missing tile server would otherwise leave a blank frame with the
-        // analytical layer invisible on top of it.
+        /* Real OSM tiles when the network is there, the bundled Natural Earth
+           vectors when it is not — see features/tiles.ts. The offline gate in
+           docs/judging-checklist.md is what makes the fallback mandatory rather
+           than a nicety. */
         const instance = new maplibre.Map({
           container: ref.current,
           style: { version: 8, sources: {}, layers: [
-            { id: 'bg', type: 'background', paint: { 'background-color': MAP.water } },
+            { id: 'bg', type: 'background', paint: { 'background-color': online ? '#e8e3dc' : MAP.water } },
           ] },
           bounds: layer.bounds,
           fitBoundsOptions: { padding: FIT_PADDING },
@@ -191,21 +198,26 @@ function MapCanvas({ layer, regionId, syntheticLayers, quiet = false }: {
              Natural Earth is public domain and is bundled into the build, so
              this costs no runtime network access — the offline gate holds.
              Provenance: data/metadata/basemap/natural-earth.provenance.json */
-          instance.addSource('ne-land', { type: 'geojson', data: `${import.meta.env.BASE_URL}basemap/ne_110m_land.geojson` });
-          instance.addLayer({
-            id: 'ne-land-fill', type: 'fill', source: 'ne-land',
-            paint: { 'fill-color': MAP.land, 'fill-outline-color': MAP.landEdge },
-          });
-          instance.addSource('ne-coast', { type: 'geojson', data: `${import.meta.env.BASE_URL}basemap/ne_50m_coastline.geojson` });
-          instance.addLayer({
-            id: 'ne-coast-line', type: 'line', source: 'ne-coast',
-            paint: { 'line-color': MAP.coast, 'line-width': 1 },
-          });
+          if (online) {
+            /* The reference basemap: real streets, towns and water names from
+               OpenStreetMap. Light, because this map sits inside a bordered
+               panel and reads as a figure in a report rather than as chrome. */
+            const raster = rasterBasemap('light');
+            instance.addSource('tiles', raster.source as never);
+            instance.addLayer({ id: 'tiles', type: 'raster', source: 'tiles', paint: raster.paint as never });
+          } else {
+            instance.addSource('ne-land', { type: 'geojson', data: `${import.meta.env.BASE_URL}basemap/ne_110m_land.geojson` });
+            instance.addLayer({
+              id: 'ne-land-fill', type: 'fill', source: 'ne-land',
+              paint: { 'fill-color': MAP.land, 'fill-outline-color': MAP.landEdge },
+            });
+            instance.addSource('ne-coast', { type: 'geojson', data: `${import.meta.env.BASE_URL}basemap/ne_50m_coastline.geojson` });
+            instance.addLayer({
+              id: 'ne-coast-line', type: 'line', source: 'ne-coast',
+              paint: { 'line-color': MAP.coast, 'line-width': 1 },
+            });
+          }
 
-          /* The district boundary, drawn from the validated geometry we already
-             hold. This is the part that is always real — the raster below is a
-             demo asset that may not be packaged, and a map showing nothing at
-             all because one image 404'd was worse than useless. */
           /* Graticule, stepped to the extent rather than fixed at one degree.
              A district is roughly a third of a degree across, so a 1° grid put
              at most one line on screen — or none — and gave the frame no sense
@@ -231,11 +243,15 @@ function MapCanvas({ layer, regionId, syntheticLayers, quiet = false }: {
           instance.addSource('graticule', {
             type: 'geojson', data: { type: 'FeatureCollection', features: lines },
           });
-          instance.addLayer({
-            id: 'graticule-line', type: 'line', source: 'graticule',
-            paint: { 'line-color': MAP.graticule, 'line-width': 1 },
-          });
+          // Useful over an empty frame; clutter laid over a street network.
+          if (!online) {
+            instance.addLayer({
+              id: 'graticule-line', type: 'line', source: 'graticule',
+              paint: { 'line-color': MAP.graticule, 'line-width': 1 },
+            });
+          }
 
+          const ink = online ? MAP.districtOnLight : MAP.district;
           const shape = shapeForRegion(regionId, layer.bounds);
           if (shape) {
             instance.addSource('sparc-district', {
@@ -254,20 +270,20 @@ function MapCanvas({ layer, regionId, syntheticLayers, quiet = false }: {
               id: 'sparc-district-halo',
               type: 'line',
               source: 'sparc-district',
-              paint: { 'line-color': MAP.district, 'line-width': 8, 'line-opacity': 0.12, 'line-blur': 5 },
+              paint: { 'line-color': ink, 'line-width': 8, 'line-opacity': online ? 0.18 : 0.12, 'line-blur': 5 },
             });
             instance.addLayer({
               id: 'sparc-district-fill',
               type: 'fill',
               source: 'sparc-district',
-              paint: { 'fill-color': MAP.district, 'fill-opacity': 0.09 },
+              paint: { 'fill-color': ink, 'fill-opacity': online ? 0.16 : 0.09 },
             });
             instance.addLayer({
               id: 'sparc-district-line',
               type: 'line',
               source: 'sparc-district',
               paint: {
-                'line-color': MAP.district,
+                'line-color': ink,
                 'line-width': 1.4,
                 // Dashed when the outline is a bounding box rather than a
                 // surveyed boundary, so the two never look alike.
@@ -332,6 +348,10 @@ function MapCanvas({ layer, regionId, syntheticLayers, quiet = false }: {
   return (
     <>
       <div ref={ref} className="map" role="img" aria-label={`Map preview of ${layer.id}. The table below carries the same information.`} />
+      {/* OSM is ODbL and CARTO requires credit. Rendered unconditionally: the
+          probe decides whether tiles load, and a credit that only appears on
+          some renders is a credit that gets missed. */}
+      <p className="map__attrib">{ATTRIBUTION}</p>
       {rasterMissing && !quiet ? (
         <Callout tone="info" title="Analytical raster not packaged in this build">
           <p>

@@ -23,6 +23,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { LonLat } from '../globe/overlay';
+import { ATTRIBUTION, rasterBasemap, tilesAvailable } from './tiles';
 
 /* Sea to land is a real step, not a shade. Every layer above it is a hairline
    so the district stays the only solid thing on the canvas. */
@@ -59,6 +60,7 @@ export function Basemap({
   onReady?: (handle: BasemapHandle) => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
+  const credit = useRef<HTMLParagraphElement | null>(null);
   const api = useRef<{
     setPaint: (signal: string, weight: number, approximate: boolean) => void;
   } | null>(null);
@@ -69,7 +71,7 @@ export function Basemap({
     let map: { remove: () => void } | null = null;
 
     (async () => {
-      const maplibre = await import('maplibre-gl');
+      const [maplibre, online] = await Promise.all([import('maplibre-gl'), tilesAvailable()]);
       if (disposed || !host.current) return;
 
       let w = 180, s = 90, e = -180, n = -90;
@@ -81,10 +83,13 @@ export function Basemap({
       }
       const cx = (w + e) / 2;
       const cy = (s + n) / 2;
-      /* Grow the frame to the scale the basemap can actually draw, keeping the
-         district centred. This is the line that turned a blank rectangle into
-         a map. */
-      const half = Math.max((e - w) / 2, (n - s) / 2, MIN_SPAN_DEG / 2);
+      /* How wide to frame depends on what is underneath. Real tiles are legible
+         all the way down, so the district gets a close crop with a little
+         context around it. The bundled vectors are 1:50M and have nothing to
+         show at that scale, so offline the frame opens out to MIN_SPAN_DEG —
+         which is the fix that turned a blank rectangle into a map. */
+      const extent = Math.max((e - w) / 2, (n - s) / 2);
+      const half = online ? extent * 1.35 : Math.max(extent, MIN_SPAN_DEG / 2);
       const bounds: [number, number, number, number] = [cx - half, cy - half, cx + half, cy + half];
 
       const instance = new maplibre.Map({
@@ -108,27 +113,41 @@ export function Basemap({
         instance.resize();
         instance.fitBounds(bounds, { padding: 40, animate: false });
 
-        instance.addSource('land', { type: 'geojson', data: `${B}basemap/ne_110m_land.geojson` });
-        instance.addLayer({ id: 'land', type: 'fill', source: 'land', paint: { 'fill-color': PALETTE.land } });
+        if (credit.current) credit.current.hidden = !online;
+        if (online) {
+          /* Real streets, towns and water names. This is the layer that lets a
+             reader answer "where is that" without leaving the product — the
+             bundled vectors know a coastline and a state border and nothing
+             else. Dark, because the interface floats white readouts over it. */
+          const raster = rasterBasemap('dark');
+          instance.addSource('tiles', raster.source as never);
+          instance.addLayer({ id: 'tiles', type: 'raster', source: 'tiles', paint: raster.paint as never });
+        } else {
+          /* Unplugged. The offline gate requires this path to keep working, so
+             the bundled Natural Earth vectors stand in — less to read, but the
+             district and every figure attached to it are unchanged. */
+          instance.addSource('land', { type: 'geojson', data: `${B}basemap/ne_110m_land.geojson` });
+          instance.addLayer({ id: 'land', type: 'fill', source: 'land', paint: { 'fill-color': PALETTE.land } });
 
-        // Admin-1 gives the frame something a person can recognise at this scale.
-        instance.addSource('states', { type: 'geojson', data: `${B}basemap/india-admin1.geojson` });
-        instance.addLayer({ id: 'states-fill', type: 'fill', source: 'states', paint: { 'fill-color': PALETTE.landHi } });
-        instance.addLayer({ id: 'states-line', type: 'line', source: 'states', paint: { 'line-color': PALETTE.state, 'line-width': 1 } });
+          instance.addSource('states', { type: 'geojson', data: `${B}basemap/india-admin1.geojson` });
+          instance.addLayer({ id: 'states-fill', type: 'fill', source: 'states', paint: { 'fill-color': PALETTE.landHi } });
+          instance.addLayer({ id: 'states-line', type: 'line', source: 'states', paint: { 'line-color': PALETTE.state, 'line-width': 1 } });
 
-        instance.addSource('coast', { type: 'geojson', data: `${B}basemap/ne_50m_coastline.geojson` });
-        instance.addLayer({ id: 'coast', type: 'line', source: 'coast', paint: { 'line-color': PALETTE.coast, 'line-width': 1.1 } });
+          instance.addSource('coast', { type: 'geojson', data: `${B}basemap/ne_50m_coastline.geojson` });
+          instance.addLayer({ id: 'coast', type: 'line', source: 'coast', paint: { 'line-color': PALETTE.coast, 'line-width': 1.1 } });
 
-        // One-degree grid, so the frame has a sense of scale without a scalebar.
-        const lines: unknown[] = [];
-        for (let lon = Math.floor(cx - half) - 2; lon <= Math.ceil(cx + half) + 2; lon += 1) {
-          lines.push({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [[lon, cy - half - 4], [lon, cy + half + 4]] } });
+          // A one-degree grid gives the empty frame a sense of scale. With real
+          // tiles underneath it would just be clutter over the street network.
+          const lines: unknown[] = [];
+          for (let lon = Math.floor(cx - half) - 2; lon <= Math.ceil(cx + half) + 2; lon += 1) {
+            lines.push({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [[lon, cy - half - 4], [lon, cy + half + 4]] } });
+          }
+          for (let lat = Math.floor(cy - half) - 2; lat <= Math.ceil(cy + half) + 2; lat += 1) {
+            lines.push({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [[cx - half - 4, lat], [cx + half + 4, lat]] } });
+          }
+          instance.addSource('grid', { type: 'geojson', data: { type: 'FeatureCollection', features: lines } as never });
+          instance.addLayer({ id: 'grid', type: 'line', source: 'grid', paint: { 'line-color': PALETTE.grid, 'line-width': 1 } });
         }
-        for (let lat = Math.floor(cy - half) - 2; lat <= Math.ceil(cy + half) + 2; lat += 1) {
-          lines.push({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [[cx - half - 4, lat], [cx + half + 4, lat]] } });
-        }
-        instance.addSource('grid', { type: 'geojson', data: { type: 'FeatureCollection', features: lines } as never });
-        instance.addLayer({ id: 'grid', type: 'line', source: 'grid', paint: { 'line-color': PALETTE.grid, 'line-width': 1 } });
 
         instance.addSource('district', {
           type: 'geojson',
@@ -185,5 +204,13 @@ export function Basemap({
 
   useEffect(() => { api.current?.setPaint(signal, weight, approximate); }, [signal, weight, approximate]);
 
-  return <div className="atlas__map" ref={host} />;
+  return (
+    <>
+      <div className="atlas__map" ref={host} />
+      {/* Rendered by the map itself rather than left to each caller: OSM is
+          ODbL and CARTO requires credit, so this must not be something a screen
+          can forget to include. */}
+      <p className="atlas__attrib" ref={credit}>{ATTRIBUTION}</p>
+    </>
+  );
 }
