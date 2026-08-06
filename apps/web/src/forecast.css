@@ -10,6 +10,13 @@
   padding-bottom: 2rem;
 }
 
+/* The themed drawer intentionally removes `.app`'s page padding so its
+ * header, ledger and rail can run edge to edge. Forecast content still needs
+ * an inner reading margin; otherwise the first heading and cards sit directly
+ * against the drawer seam. Keep this scoped so standalone dashboard pages do
+ * not accumulate a second horizontal gutter. */
+.sparc-panel .forecast-dashboard { padding-inline: 1.75rem; }
+
 .forecast-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(13rem, 0.36fr);
@@ -301,6 +308,10 @@
   .forecast-section-heading > span,
   .forecast-panel__note { display: block; margin-top: 0.3rem; }
   .forecast-map__canvas { height: 14rem; }
+}
+
+@media (max-width: 46rem) {
+  .sparc-panel .forecast-dashboard { padding-inline: 1rem; }
 }
 
 /* The dashboard is also rendered inside the resizable analysis drawer. Media
