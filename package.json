@@ -1,6 +1,6 @@
 {
   "name": "sparc-vercel-deployment",
-  "private": true,
+  "private": false,
   "scripts": {
     "vercel-build": "npm --prefix apps/web ci --ignore-scripts && npm --prefix apps/web run build && npm --prefix orbital-website ci --ignore-scripts && node scripts/vercel/assemble.mjs"
   }
