@@ -302,8 +302,12 @@ export default function App({ panel }: { panel?: PanelMode } = {}) {
               else go('#/dashboard');
             }}
             onBack={() => {
-              const next = { stage: 'locate' as Stage, route: { name: 'summary' as const } };
-              if (panel) setPanelNav(next); else setNav(next);
+              /* In the globe drawer, the × is a dismiss control: returning to
+                 the standalone location route would leave the drawer open and
+                 make the control appear inert. Standalone keeps the two-step
+                 flow and returns to location selection. */
+              if (panel) panel.onClose();
+              else setNav({ stage: 'locate', route: { name: 'summary' } });
             }}
           />
         )}

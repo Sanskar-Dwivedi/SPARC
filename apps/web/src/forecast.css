@@ -5,6 +5,7 @@
   --forecast-accent: var(--accent);
   --forecast-mono: var(--data, ui-monospace, SFMono-Regular, Consolas, monospace);
   --forecast-muted: var(--ink-tertiary, var(--dim));
+  container-type: inline-size;
   min-width: 0;
   padding-bottom: 2rem;
 }
@@ -209,13 +210,13 @@
 .forecast-panel--map { overflow: hidden; }
 
 .forecast-chart { min-width: 0; }
-.forecast-chart__svg { display: block; width: 100%; height: auto; min-height: 14rem; overflow: visible; }
+.forecast-chart__svg { display: block; width: 100%; height: 20rem; overflow: visible; }
 .forecast-chart__gridline line { stroke: var(--line); stroke-width: 1; }
-.forecast-chart__gridline text { fill: var(--dim); font: 0.62rem var(--forecast-mono); }
-.forecast-chart__band { opacity: 0.18; }
-.forecast-chart__line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.forecast-chart__dot { stroke-width: 2; }
-.forecast-chart__x-label { fill: var(--dim); font: 0.62rem var(--forecast-mono); }
+.forecast-chart__gridline text { fill: var(--dim); font: 0.72rem var(--forecast-mono); }
+.forecast-chart__band { opacity: 0.22; }
+.forecast-chart__line { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.forecast-chart__dot { stroke-width: 2.5; }
+.forecast-chart__x-label { fill: var(--dim); font: 0.7rem var(--forecast-mono); }
 .forecast-chart__point-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.35rem; margin: 0.4rem 0 0; padding: 0; list-style: none; }
 .forecast-chart__point { display: grid; gap: 0.12rem; width: 100%; padding: 0.42rem 0.45rem; color: var(--dim); background: transparent; border: 1px solid var(--line); text-align: left; cursor: pointer; }
 .forecast-chart__point:hover,
@@ -299,6 +300,49 @@
   .forecast-panel__heading { display: block; }
   .forecast-section-heading > span,
   .forecast-panel__note { display: block; margin-top: 0.3rem; }
+  .forecast-map__canvas { height: 14rem; }
+}
+
+/* The dashboard is also rendered inside the resizable analysis drawer. Media
+ * queries see the full viewport, so they leave the chart and map side by side
+ * inside a narrow drawer. Container queries make the forecast workspace
+ * respond to the space it actually owns. */
+@container (max-width: 56rem) {
+  .forecast-hero,
+  .forecast-focus__header { grid-template-columns: minmax(0, 1fr); }
+  .forecast-hero__meta { border-top: 1px solid var(--line); border-left: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .forecast-hero__meta div { padding: 0.65rem 0.7rem 0.3rem 0; border-right: 1px solid var(--line); border-bottom: 0; }
+  .forecast-hero__meta div + div { padding-left: 0.7rem; }
+  .forecast-hero__meta div:last-child { border-right: 0; }
+  .forecast-focus__headline { justify-items: start; padding: 0.7rem 0 0; border-top: 1px solid var(--line); border-left: 0; }
+  .forecast-workspace { grid-template-columns: minmax(0, 1fr); }
+}
+
+@container (max-width: 42rem) {
+  .forecast-card-list,
+  .forecast-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .forecast-summary-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .forecast-summary-stats div:nth-child(3n) { border-right: 1px solid var(--line); }
+  .forecast-summary-stats div:nth-child(2n) { border-right: 0; }
+  .forecast-summary-stats div:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  .forecast-chart__svg { height: 18rem; }
+}
+
+@container (max-width: 30rem) {
+  .forecast-hero__meta { grid-template-columns: minmax(0, 1fr); }
+  .forecast-hero__meta div,
+  .forecast-hero__meta div + div { padding: 0.55rem 0; border-right: 0; border-bottom: 1px solid var(--line); }
+  .forecast-hero__meta div:last-child { border-bottom: 0; }
+  .forecast-summary-stats { grid-template-columns: minmax(0, 1fr); }
+  .forecast-summary-stats div,
+  .forecast-summary-stats div:nth-child(2n),
+  .forecast-summary-stats div:nth-child(3n) { border-right: 0; border-top: 1px solid var(--line); }
+  .forecast-summary-stats div:first-child { border-top: 0; }
+  .forecast-section-heading,
+  .forecast-panel__heading { display: block; }
+  .forecast-section-heading > span,
+  .forecast-panel__note { display: block; margin-top: 0.3rem; }
+  .forecast-chart__svg { height: 17rem; }
   .forecast-map__canvas { height: 14rem; }
 }
 

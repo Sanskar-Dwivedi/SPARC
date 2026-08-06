@@ -564,7 +564,7 @@
 :is(.sparc-panel, #root) .console {
   width: 100%;
   max-height: none;
-  padding: clamp(1.75rem, 5vw, 3rem) 1.5rem;
+  padding: clamp(1.75rem, 5vw, 3rem) clamp(2rem, 4%, 3rem);
   background: none;
   border: 0;
   border-radius: 0;

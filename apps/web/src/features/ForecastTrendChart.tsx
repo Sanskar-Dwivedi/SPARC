@@ -68,6 +68,7 @@ export function ForecastTrendChart({
       <svg
         className="forecast-chart__svg"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        preserveAspectRatio="none"
         role="img"
         aria-labelledby={titleId}
       >
