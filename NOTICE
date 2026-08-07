@@ -1,0 +1,34 @@
+SPARC — Satellite-Powered Analytics for Resource Conservation
+Copyright 2026 SPARC contributors
+
+This product includes software developed for the SPARC project.
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+------------------------------------------------------------------------------
+Third-party data and services
+------------------------------------------------------------------------------
+
+The Apache License above covers this project's own source code. It does not
+relicense the data or tile services below, which keep their own terms and
+attribution requirements. Check these before redistributing.
+
+Administrative boundaries
+  geoBoundaries (gbOpen), Open Data Commons Open Database License (ODbL) v1.0.
+  Share-alike: a derived boundary database must be released under ODbL.
+  https://www.geoboundaries.org/
+
+Basemap tiles
+  © OpenStreetMap contributors, ODbL 1.0 — https://www.openstreetmap.org/copyright
+  Tiles served by CARTO — https://carto.com/attributions
+
+Physical geography
+  Natural Earth, public domain — https://www.naturalearthdata.com/
+
+Satellite imagery
+  Copernicus Sentinel-2 data, accessed through Google Earth Engine.
+  Contains modified Copernicus Sentinel data.
+
+Typefaces
+  IBM Plex Mono, Fraunces and Public Sans — SIL Open Font License 1.1.
+
+A fuller inventory is in docs/open-source-reuse.md and docs/data-sources.md.

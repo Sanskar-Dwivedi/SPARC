@@ -1,0 +1,35 @@
+# Line-ending policy.
+#
+# SPARC verifies the SHA-256 of its contract packs and boundary files at run
+# time — see apps/api/app/static_repository.py. That check compares against
+# hashes taken over LF bytes, so any file it covers has to arrive byte-identical
+# on every platform. Without this file, Git's core.autocrlf=true rewrites them
+# to CRLF on Windows checkout and every checksum in the manifest fails, which
+# makes a fresh clone look broken on the integrity gate it is meant to pass.
+#
+# Default: normalise text in the repository, and check it out as-is.
+* text=auto eol=lf
+
+# Checksum-verified artefacts. Explicit rather than relying on the default,
+# because these are the ones where a stray CR is a hard failure and not a
+# cosmetic diff.
+*.json      text eol=lf
+*.geojson   text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+
+# Windows-native tooling that expects CRLF.
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# Binary: never touched, never diffed as text.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.webp      binary
+*.woff      binary
+*.woff2     binary
+*.glb       binary
+*.pdf       binary
+*.zip       binary
