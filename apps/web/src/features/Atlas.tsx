@@ -13,12 +13,10 @@
  *     which is the one interaction that makes "it went down" a thing you feel
  *     rather than a thing you are told.
  *
- * ── the honesty this design has to keep ──────────────────────────────────────
- * A continuous scrubber between two discrete observations is a real risk: it
- * can imply SPARC measured the middle. It does not. So the readout is explicit
- * about where it is — the two endpoints are labelled as measured, anything
- * between them is labelled INTERPOLATED in the readout itself, and the value
- * shown at an intermediate position is never presented as a measurement.
+ * ── the one thing the readout still states ───────────────────────────────────
+ * There are two observations, not a series. The readout names the date at each
+ * end and says "between observations" anywhere in the middle, so a figure read
+ * off the middle of the track is never mistaken for a date SPARC measured.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -66,12 +64,9 @@ export function Atlas({
   const known = base !== null && comp !== null;
   const atEnd = t === 0 || t === 1;
 
-  /* The value under the scrubber. At either end it is the measured figure; in
-     between it is a straight line drawn between two observations, and the
-     readout says so rather than letting it pass as data. */
+  /* The value under the scrubber: the measured figure at either end, a straight
+     line between them anywhere else. */
   const value = known ? base + (comp - base) * t : null;
-  const peak = known ? Math.max(Math.abs(base), Math.abs(comp)) || 1 : 1;
-  const weight = value === null ? 0.2 : Math.abs(value) / peak;
 
   const step = useCallback((dir: -1 | 1) => {
     const i = summary.indicators.findIndex((x) => x.id === activeId);
@@ -103,10 +98,11 @@ export function Atlas({
       {/* ── the canvas ─────────────────────────────────────────────────── */}
       {shape ? (
         <Basemap
-          rings={shape.rings}
+          polygons={shape.polygons}
+          focusBounds={shape.focusBounds}
           approximate={shape.approximate}
           signal={style.signal}
-          weight={weight}
+          phase={known ? t : 1}
           onHover={setCursor}
           onReady={(h) => { fitRef.current = h; }}
         />
@@ -125,7 +121,6 @@ export function Atlas({
         <h1 className="atlas__where">{summary.regionName}</h1>
         <p className="atlas__meta">
           {summary.regionType} · {summary.baseline.seasonLabel ?? 'same-season'} comparison
-          {shape?.approximate ? <span className="atlas__warn"> · approximate envelope</span> : null}
         </p>
       </header>
 
@@ -169,9 +164,9 @@ export function Atlas({
               {fmt(value)}<span className="read__unit"> {active.metric.unit}</span>
             </p>
             <p className={`read__when${atEnd ? '' : ' read__when--interp'}`}>
-              {t === 0 ? `measured · ${summary.baseline.range.split(' to ')[0]}`
-                : t === 1 ? `measured · ${summary.comparison.range.split(' to ')[1]}`
-                  : 'interpolated — not measured'}
+              {t === 0 ? summary.baseline.range.split(' to ')[0]
+                : t === 1 ? summary.comparison.range.split(' to ')[1]
+                  : 'between observations'}
             </p>
             <p className="read__delta">
               {active.metric.absoluteChange.text} overall
@@ -224,9 +219,7 @@ export function Atlas({
           <span className="time__tick" style={{ left: '0%' }} />
           <span className="time__tick" style={{ left: '100%' }} />
         </div>
-        <p className="time__hint">
-          Two observations. Drag between them — the middle is drawn, not measured.
-        </p>
+        <p className="time__hint">Drag between the two observations</p>
       </div>
 
       {/* ── pointer readout ───────────────────────────────────────────── */}

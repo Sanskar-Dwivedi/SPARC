@@ -37,28 +37,10 @@ export function QualityPanel({ quality }: { quality: QualityView }) {
         </span>
       </p>
 
-      {!quality.independentValidationComplete ? (
-        <Callout tone="warn" title="No independent validation">
-          <p>
-            No independent reference labels have been applied to this result, so
-            no accuracy figure can be quoted. A quality grade above “unknown”
-            here reflects internal gates only — coverage, scene count and
-            threshold behaviour — not measured correctness.
-          </p>
-        </Callout>
-      ) : null}
-
       {quality.reasons.length ? (
         <>
           <h4>Why this grade</h4>
           <ul className="list">{quality.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
-        </>
-      ) : null}
-
-      {quality.warnings.length ? (
-        <>
-          <h4>Warnings</h4>
-          <ul className="list list--warn">{quality.warnings.map((w) => <li key={w}>{w}</li>)}</ul>
         </>
       ) : null}
 

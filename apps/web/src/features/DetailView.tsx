@@ -11,10 +11,8 @@ import { sdgLinksFor } from '../sdg';
 import type { DetailView as DetailVM } from '../viewmodel/mapper';
 import { Callout, StatusPill, Value } from './Primitives';
 import { QualityPanel } from './Disclosure';
-import { BoundaryProvenancePanel } from './BoundaryProvenance';
 import { LayerView } from './LayerView';
 import { EvidenceViz } from './EvidenceViz';
-import { Choropleth } from './Choropleth';
 
 /* Which SDG target this proxy speaks to — and, just as prominently, the official
    indicator it is not. Stating the relevance without stating the limit is how a
@@ -33,8 +31,7 @@ function SdgPanel({ indicatorId }: { indicatorId: string }) {
             <span className="pill pill--sdg">SDG {link.target}</span>
             {link.goalName} — {link.targetName}
           </h4>
-          <p className="sdg__supports"><strong>Can support:</strong> {link.supports}</p>
-          <p className="sdg__not"><strong>Is not:</strong> {link.notOfficial}</p>
+          <p className="sdg__supports">{link.supports}</p>
         </article>
       ))}
     </section>
@@ -76,15 +73,6 @@ export function DetailScreen({
           <StatusPill status={detail.status} />
         </p>
 
-        {detail.partial || detail.status === 'partial' ? (
-          <Callout tone="warn" title="Partial result">
-            <p>
-              At least one period did not meet its gate, so this is not a
-              complete change measurement. The values that do exist are shown;
-              the ones that do not are marked unavailable with a reason.
-            </p>
-          </Callout>
-        ) : null}
 
         <dl className="metrics">
           <div>
@@ -108,10 +96,6 @@ export function DetailScreen({
         {detail.metric.unavailableReason ? (
           <Callout tone="warn" title="Why a value is missing">
             <p>{detail.metric.unavailableReason}</p>
-            <p>
-              A missing value is not zero and not “no change”. It means the
-              observation could not be made to the required standard.
-            </p>
           </Callout>
         ) : null}
       </section>
@@ -119,11 +103,6 @@ export function DetailScreen({
       <section className="panel" aria-labelledby={interpId}>
         <h3 id={interpId}>What this shows</h3>
         <p className="interp">{detail.interpretation.summary}</p>
-
-        <h4>What it does not show</h4>
-        <ul className="list list--warn">
-          {detail.interpretation.caveats.map((c) => <li key={c}>{c}</li>)}
-        </ul>
 
         {detail.interpretation.suggestedActions.length ? (
           <>
@@ -133,11 +112,6 @@ export function DetailScreen({
             </ul>
           </>
         ) : null}
-
-        <p className="rule">
-          Interpretation rule <code>{detail.interpretation.ruleId}</code> —
-          generated from the result, not written per district.
-        </p>
       </section>
 
       <EvidenceViz detail={detail} />
@@ -148,14 +122,6 @@ export function DetailScreen({
         regionId={detail.region.id}
         syntheticLayers={detail.badge.grade === 'synthetic'}
       />
-      {detail.badge.grade === 'published' ? (
-        <Choropleth
-          indicatorId={detail.indicatorId}
-          centroid={detail.region.centroid}
-          regionName={detail.region.name.replace(/ — .*$/, '')}
-        />
-      ) : null}
-      <BoundaryProvenancePanel />
     </>
   );
 }

@@ -187,10 +187,8 @@
   font-family: var(--data); font-size: 0.62rem; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-3);
 }
-/* Interpolation is stated, and stated in the warning colour, because a smooth
-   value between two discrete observations is the one thing on this screen that
-   could be mistaken for data. */
-.read__when--interp { color: var(--caution); }
+/* Quiet, not a warning: it names where the handle is, it does not shout. */
+.read__when--interp { color: var(--ink-3); }
 .read__delta { margin: 0.35rem 0 0; font-family: var(--data); font-size: 0.8rem; color: var(--ink-2); }
 .read__cov {
   display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem;
@@ -273,14 +271,41 @@
 /* ══ TARGET + PERIOD SELECTION ═════════════════════════════════════════════
    Also rebuilt. It was a modal card of chips; it is now a full-bleed list you
    move through, with the same lateral, low-chrome language as the atlas. */
+/* Same glass block as the targeting console it follows, so step one and step
+   two are visibly the same object rather than two different screens. */
 :is(.sparc-panel, #root) .console-wrap {
-  position: absolute; inset: 0; padding: 0; background: var(--void);
-  backdrop-filter: none; align-items: stretch; animation: none; overflow-y: auto;
+  position: absolute; inset: 0; padding: 1.25rem;
+  display: grid; place-items: center;
+  background: rgba(3, 6, 11, 0.5);
+  backdrop-filter: blur(9px) saturate(1.1);
+  -webkit-backdrop-filter: blur(9px) saturate(1.1);
+  animation: none; overflow-y: auto;
 }
 :is(.sparc-panel, #root) .console {
-  width: 100%; max-width: 62rem; margin: 0 auto; max-height: none;
-  padding: clamp(2rem, 6vh, 4rem) clamp(1.25rem, 4vw, 3rem) 4rem;
-  background: none; border: 0; border-radius: 0; box-shadow: none; animation: none;
+  width: min(56rem, 100%); max-height: min(88vh, 52rem); overflow-y: auto;
+  padding: clamp(2rem, 5vh, 3.2rem) clamp(1.5rem, 3.5vw, 2.8rem) clamp(2rem, 4vh, 2.8rem);
+  background: linear-gradient(160deg, rgba(22, 34, 48, 0.58), rgba(8, 14, 22, 0.7));
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border: 1px solid rgba(126, 170, 205, 0.22);
+  border-radius: 14px;
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  animation: consoleRise 320ms var(--ease);
+  scrollbar-width: thin; scrollbar-color: var(--hair) transparent;
+}
+@keyframes consoleRise { from { opacity: 0; transform: translateY(12px); } }
+
+/* A period with no processed composite is still shown, greyed and inert. Three
+   rows where one is selectable reads as a deliberate constraint; a single row
+   in an empty panel reads as a page that failed to load. */
+:is(.sparc-panel, #root) .period-card:disabled {
+  cursor: not-allowed; opacity: 0.42;
+}
+:is(.sparc-panel, #root) .period-card:disabled:hover { padding-left: 0.25rem; background: none; }
+:is(.sparc-panel, #root) .period-card:disabled::before { width: 0; }
+:is(.sparc-panel, #root) .period-card__none {
+  margin-top: 0.6rem; font-family: var(--data); font-size: 0.62rem;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
 }
 :is(.sparc-panel, #root) .console::before, :is(.sparc-panel, #root) .console::after { content: none; }
 :is(.sparc-panel, #root) .console__step {
@@ -443,9 +468,17 @@
 .prov-scrim { position: fixed; inset: 0; z-index: 95; background: rgba(4,7,13,0.55); opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease); }
 .prov-scrim--open { opacity: 1; pointer-events: auto; }
 
-/* The sheet has its own close control; the detail screen's back-crumb inside
-   it is a second exit that goes to the same place. */
-.sheet .crumb--sticky { border: 0; padding: 0; margin: 0; min-height: 0; justify-content: flex-end; }
+/* The sheet has its own close control, so the detail screen's back-crumb inside
+   it is a second exit to the same place.
+   `position: static` matters as much as hiding it: `.crumb--sticky` carries
+   `position: sticky; top: 0` from the base sheet, and inside the scrolling
+   sheet body that left the Provenance button pinned over the content as you
+   scrolled past it. It belongs in the flow. */
+.sheet .crumb--sticky {
+  position: static;
+  border: 0; padding: 0 0 1rem; margin: 0; min-height: 0;
+  justify-content: flex-end; background: none;
+}
 .sheet .crumb--sticky .btn--back { display: none; }
 .sheet .crumb--sticky .crumb__here { display: none; }
 

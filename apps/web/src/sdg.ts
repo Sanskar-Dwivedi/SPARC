@@ -94,5 +94,4 @@ export function sdgChips(indicatorId: string): string[] {
 }
 
 export const SDG_SCOPE_NOTE =
-  'SPARC maps each proxy to the SDG target it is relevant to. It does not produce ' +
-  'official SDG indicator values, and nothing here should be submitted as national reporting.';
+  'Each proxy is mapped to the SDG target it is relevant to.';

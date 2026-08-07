@@ -185,28 +185,38 @@ export function PeriodConsole({
           composite behind them.
         </p>
 
+        {/* Every season is listed, not only the one this region has a pack for.
+            A single row in a large panel reads as a page that failed to load;
+            three rows with one live reads as the deliberate constraint it is —
+            SPARC resolves precomputed results and does not process on request. */}
         <ul className="period-list">
-          {periods.map((p) => (
-            <li key={p.id}>
-              <button type="button" className="period-card" onClick={() => onChosen(p)}>
-                <span className="period-card__season">{p.seasonLabel}</span>
-                <span className="period-card__label">{p.label}</span>
-                <span className="period-card__dates">
-                  <span>{p.baselineStart} → {p.baselineEnd}</span>
-                  <span className="period-card__vs">compared with</span>
-                  <span>{p.comparisonStart} → {p.comparisonEnd}</span>
-                </span>
-                <span className="period-card__go">Analyse {regionName} →</span>
-              </button>
-            </li>
-          ))}
+          {FROZEN_PERIODS.map((p) => {
+            const ready = periods.some((available) => available.id === p.id);
+            return (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  className="period-card"
+                  disabled={!ready}
+                  onClick={() => ready && onChosen(p)}
+                >
+                  <span className="period-card__season">{p.seasonLabel}</span>
+                  <span className="period-card__label">{p.label}</span>
+                  <span className="period-card__dates">
+                    <span>{p.baselineStart} → {p.baselineEnd}</span>
+                    <span className="period-card__vs">compared with</span>
+                    <span>{p.comparisonStart} → {p.comparisonEnd}</span>
+                  </span>
+                  {ready ? (
+                    <span className="period-card__go">Analyse {regionName} →</span>
+                  ) : (
+                    <span className="period-card__none">No composite for this region</span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
-
-        <p className="console__note">
-          Other date ranges are not offered because nothing has been computed for
-          them. SPARC resolves immutable precomputed results; it does not process
-          imagery on request.
-        </p>
       </div>
     </div>
   );

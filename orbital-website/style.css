@@ -200,7 +200,7 @@ body.ready #hud-top, body.ready #hud-bottom { opacity: 1; }
   display: grid;
   place-items: center;
   overflow-y: auto;
-  padding: 0;
+  padding: 20px;
 
   --c-ink: #eef2f4;
   --c-dim: #9fb0bb;
@@ -212,24 +212,34 @@ body.ready #hud-top, body.ready #hud-bottom { opacity: 1; }
   --c-body: "Public Sans", system-ui, sans-serif;
   --c-mono: "IBM Plex Mono", var(--mono);
 
-  background:
-    radial-gradient(120% 80% at 50% 0%, rgba(72, 214, 239, 0.055), transparent 62%),
-    #04070d;
+  /* Scrim, not a page. The planet stays visible behind the console, which is
+     what stops the target step feeling like a different site. */
+  background: rgba(3, 6, 11, 0.5);
+  backdrop-filter: blur(9px) saturate(1.1);
+  -webkit-backdrop-filter: blur(9px) saturate(1.1);
   animation: fade 220ms ease;
 }
 @keyframes fade { from { opacity: 0; } }
 
+/* A contained block again, and glass: enough blur that the type stays legible
+   over a lit ocean, enough transparency that the globe is still there. */
 .console-panel {
   position: relative;
-  width: 100%;
-  max-width: 62rem;
-  padding: clamp(2rem, 7vh, 4.5rem) clamp(1.25rem, 4vw, 3rem) 4rem;
+  width: min(56rem, 100%);
+  max-height: min(88vh, 52rem);
+  overflow-y: auto;
+  padding: clamp(2rem, 5vh, 3.2rem) clamp(1.5rem, 3.5vw, 2.8rem) clamp(2rem, 4vh, 2.8rem);
   font-family: var(--c-body);
   color: var(--c-ink);
-  background: none;
-  border: 0;
-  box-shadow: none;
+  background: linear-gradient(160deg, rgba(22, 34, 48, 0.58), rgba(8, 14, 22, 0.7));
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border: 1px solid rgba(126, 170, 205, 0.22);
+  border-radius: 14px;
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   animation: rise 320ms var(--c-ease);
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-hair) transparent;
 }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
 .console-panel::before, .console-panel::after { content: none; }
@@ -237,7 +247,7 @@ body.ready #hud-top, body.ready #hud-bottom { opacity: 1; }
 
 .console-close {
   position: absolute;
-  top: clamp(1rem, 3vh, 2rem); right: clamp(1.25rem, 4vw, 3rem);
+  top: 1rem; right: 1.1rem;
   width: 2.1rem; height: 2.1rem;
   background: none;
   border: 1px solid var(--c-hair);
@@ -349,7 +359,7 @@ body.ready #hud-top, body.ready #hud-bottom { opacity: 1; }
 .suggestions li em { font-style: normal; color: var(--c-accent); }
 .suggestions li span { float: right; font-family: var(--c-mono); font-size: 0.78rem; color: var(--c-faint); }
 
-.console-foot { margin-top: 3rem; padding-top: 0; border: 0; }
+.console-foot { margin-top: 2.2rem; padding-top: 0; border: 0; }
 .console-foot-label {
   display: block;
   margin-bottom: 0.2rem;

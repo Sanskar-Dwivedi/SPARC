@@ -89,14 +89,11 @@ function Legend({ layer }: { layer: LayerDescriptor }) {
 }
 
 /** A descriptor carrying only what the map needs to frame a boundary. */
-function syntheticBoundaryLayer(regionId: string, rings: [number, number][][]): LayerDescriptor {
-  let w = 180, s = 90, e = -180, n = -90;
-  for (const ring of rings) {
-    for (const [lon, lat] of ring) {
-      w = Math.min(w, lon); e = Math.max(e, lon);
-      s = Math.min(s, lat); n = Math.max(n, lat);
-    }
-  }
+function syntheticBoundaryLayer(
+  regionId: string,
+  bounds: [number, number, number, number],
+): LayerDescriptor {
+  const [w, s, e, n] = bounds;
   return {
     id: `${regionId}:extent`, kind: 'district extent', representation: 'geojson',
     href: '', tileJsonHref: null, bounds: [w, s, e, n],
@@ -259,7 +256,7 @@ function MapCanvas({ layer, regionId, syntheticLayers, quiet = false }: {
               data: {
                 type: 'Feature',
                 properties: {},
-                geometry: { type: 'Polygon', coordinates: shape.rings },
+                geometry: { type: 'MultiPolygon', coordinates: shape.polygons },
               },
             });
             /* The district is the subject of the frame, so it is the one thing
@@ -352,16 +349,6 @@ function MapCanvas({ layer, regionId, syntheticLayers, quiet = false }: {
           probe decides whether tiles load, and a credit that only appears on
           some renders is a credit that gets missed. */}
       <p className="map__attrib">{ATTRIBUTION}</p>
-      {rasterMissing && !quiet ? (
-        <Callout tone="info" title="Analytical raster not packaged in this build">
-          <p>
-            The district boundary above is the validated geometry. The
-            change-detection image it would be draped with is a demo asset that
-            is not committed, so only the boundary is drawn — the extent, legend
-            and attribution below remain authoritative.
-          </p>
-        </Callout>
-      ) : null}
       {failed ? (
         <Callout tone="warn" title="Map preview unavailable">
           <p>{failed}</p>
@@ -390,23 +377,13 @@ export function LayerView({ layers, regionId, syntheticLayers = false }: {
         {webgl && shape ? (
           <div className="layer__map">
             <MapCanvas
-              layer={syntheticBoundaryLayer(regionId, shape.rings)}
+              layer={syntheticBoundaryLayer(regionId, shape.focusBounds)}
               regionId={regionId}
               syntheticLayers
               quiet
             />
           </div>
         ) : null}
-        <Callout tone="info" title="No analytical layer is packaged for this result">
-          <p>
-            {shape?.approximate
-              ? 'The outline is this district’s bounding box, drawn dashed because it is an approximation rather than a surveyed boundary.'
-              : 'The outline is the validated district boundary.'}{' '}
-            No change-detection raster exists for it, so there is nothing to drape
-            over the shape. The metric, quality evidence and provenance are
-            unaffected.
-          </p>
-        </Callout>
       </section>
     );
   }
@@ -429,10 +406,6 @@ export function LayerView({ layers, regionId, syntheticLayers = false }: {
                 regionId={regionId}
                 syntheticLayers={syntheticLayers}
               />
-              <p className="hint">
-                The map is an optional preview. Everything it shows is also in the
-                table below, which is the accessible and offline path.
-              </p>
             </div>
           ) : (
             <Callout tone="info" title="WebGL is unavailable — using the accessible layer view">
