@@ -372,7 +372,7 @@ Research/license gates
     accuracy metrics remain deliberately deferred for the hackathon track. The
     existing claim-safety gates, method-conflict suppression, provenance checks,
     and quality limitations remain active; no accuracy score or ground-truth claim
-    is fabricated. See `docs/claude-handoff.md` and `docs/project-status.md`.
+    is fabricated. See `docs/frontend-handoff.md` and `docs/project-status.md`.
   - Owner: Shared
   - Priority: P0
   - Dependency: D2-S-004
